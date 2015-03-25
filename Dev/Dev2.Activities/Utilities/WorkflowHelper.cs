@@ -167,14 +167,14 @@ namespace Dev2.Utilities
         {
             // NOTE: DO NOT set properties or variables!
             SetNamespaces(dynamicActivity);
-            // MS Memory Leak ;(
-            //var chart = WorkflowInspectionServices.GetActivities(dynamicActivity).FirstOrDefault() as Flowchart;
-            //if(chart != null)
-            //{
-            //    FixExpressions(chart, true);
-            //}
-            
-            CompileExpressionsImpl(dynamicActivity);
+			// MS Memory Leak ;(
+			//var chart = WorkflowInspectionServices.GetActivities(dynamicActivity).FirstOrDefault() as Flowchart;
+			//if(chart != null)
+			//{
+			//    FixExpressions(chart, true);
+			//}
+			Dev2Logger.Log.Info("Fix Expressions");
+			CompileExpressionsImpl(dynamicActivity);
         }
 
         #endregion
