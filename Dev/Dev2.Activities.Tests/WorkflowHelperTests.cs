@@ -24,270 +24,420 @@ using System.Xml.Linq;
 using Dev2.Common;
 using Dev2.Utilities;
 using Microsoft.CSharp.Activities;
-using Microsoft.VisualBasic.Activities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Unlimited.Applications.BusinessDesignStudio.Activities;
 
 namespace Dev2.Tests.Activities
 {
-    [TestClass]
-    [ExcludeFromCodeCoverage]
-    public class WorkflowHelperTests
-    {
-        #region Expected Namespaces/Assemblies
+	[TestClass]
+	[ExcludeFromCodeCoverage]
+	public class WorkflowHelperTests
+	{
 
-        static readonly List<string> ExpectedNamespaces = new List<string>
-        {
-            "Dev2.Common",
-            "Dev2.Data.Decisions.Operations",
-            "Dev2.Data.SystemTemplates.Models",
-            "Dev2.DataList.Contract",
-            "Dev2.DataList.Contract.Binary_Objects",
-            "Unlimited.Applications.BusinessDesignStudio.Activities"
-        };
+		[TestInitialize]
+		public void Init()
+		{
+			GlobalConstants.Resultscache.Clear();
+		}
 
-        static readonly List<string> ExpectedAssemblies = new List<string>
-        {
-            "Dev2.Common",
-            "Dev2.Data",
-            "Dev2.Activities"
-        };
+		#region Expected Namespaces/Assemblies
 
-        #endregion
+		static readonly List<string> ExpectedNamespaces = new List<string>
+		{
+			"Dev2.Common",
+			"Dev2.Data.Decisions.Operations",
+			"Dev2.Data.SystemTemplates.Models",
+			"Dev2.DataList.Contract",
+			"Dev2.DataList.Contract.Binary_Objects",
+			"Unlimited.Applications.BusinessDesignStudio.Activities"
+		};
 
-        #region CreateWorkflow
+		static readonly List<string> ExpectedAssemblies = new List<string>
+		{
+			"Dev2.Common",
+			"Dev2.Data",
+			"Dev2.Activities"
+		};
 
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void WorkflowHelperCreateWorkflowWithNullDisplayNameExpectedThrowsArgumentNullException()
-        {
-            new WorkflowHelper().CreateWorkflow(null);
-        }
+		#endregion
 
-        [TestMethod]
-        public void WorkflowHelperCreateWorkflowWithDisplayNameExpectedReturnsActivityBuilderWithFlowChartImplementation()
-        {
-            const string DisplayName = "TestResource";
+		#region CreateWorkflow
 
-            var result = new WorkflowHelper().CreateWorkflow(DisplayName);
+		[TestMethod]
+		[ExpectedException(typeof(ArgumentNullException))]
+		public void WorkflowHelperCreateWorkflowWithNullDisplayNameExpectedThrowsArgumentNullException()
+		{
+			new WorkflowHelper().CreateWorkflow(null);
+		}
 
-            Assert.IsNotNull(result);
-            Assert.IsInstanceOfType(result.Implementation, typeof(Flowchart));
+		[TestMethod]
+		public void WorkflowHelperCreateWorkflowWithDisplayNameExpectedReturnsActivityBuilderWithFlowChartImplementation()
+		{
+			const string DisplayName = "TestResource";
 
-            var flowChart = (Flowchart)result.Implementation;
-            Assert.AreEqual(flowChart.DisplayName, DisplayName);
-        }
+			var result = new WorkflowHelper().CreateWorkflow(DisplayName);
 
-        #endregion
+			Assert.IsNotNull(result);
+			Assert.IsInstanceOfType(result.Implementation, typeof(Flowchart));
 
-        #region SerializeWorkflow
+			var flowChart = (Flowchart)result.Implementation;
+			Assert.AreEqual(flowChart.DisplayName, DisplayName);
+		}
 
-        [TestMethod]
-        public void WorkflowHelperSerializeWorkflowWithNullModelServiceExpectedReturnsEmptyString()
-        {
-            var result = new WorkflowHelper().SerializeWorkflow(null);
-            Assert.AreEqual(string.Empty, result.ToString());
-        }
+		#endregion
 
-        [TestMethod]
-        public void WorkflowHelperSerializeWorkflowWithModelServiceExpectedReturnsActivityXaml()
-        {
-            var modelService = CreateModelService();
+		#region SerializeWorkflow
 
-            var result = new WorkflowHelper().SerializeWorkflow(modelService.Object).ToString();
+		[TestMethod]
+		public void WorkflowHelperSerializeWorkflowWithNullModelServiceExpectedReturnsEmptyString()
+		{
+			var result = new WorkflowHelper().SerializeWorkflow(null);
+			Assert.AreEqual(string.Empty, result.ToString());
+		}
 
-            Assert.IsFalse(result.Contains("<?xml version=\"1.0\" encoding=\"utf-16\"?>"));
+		[TestMethod]
+		public void WorkflowHelperSerializeWorkflowWithModelServiceExpectedReturnsActivityXaml()
+		{
+			var modelService = CreateModelService();
 
-            var root = XElement.Parse(result);
+			var result = new WorkflowHelper().SerializeWorkflow(modelService.Object).ToString();
 
-            XNamespace sads = "http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger";
-            var debugSymbol = root.Element(sads + "DebugSymbol.Symbol");
-            if(debugSymbol != null)
-            {
-                Assert.IsTrue(string.IsNullOrEmpty(debugSymbol.Value));
-            }
+			Assert.IsFalse(result.Contains("<?xml version=\"1.0\" encoding=\"utf-16\"?>"));
 
-            XNamespace mva = "clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities";
-            var vbSettings = root.Element(mva + "VisualBasic.Settings");
-            Assert.IsNotNull(vbSettings);
+			var root = XElement.Parse(result);
 
-            XNamespace a = "http://schemas.microsoft.com/netfx/2009/xaml/activities";
-            XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
+			XNamespace sads = "http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger";
+			var debugSymbol = root.Element(sads + "DebugSymbol.Symbol");
+			if (debugSymbol != null)
+			{
+				Assert.IsTrue(string.IsNullOrEmpty(debugSymbol.Value));
+			}
 
-            var namespacesForImplementation = root.Element(a + "TextExpression.NamespacesForImplementation");
-            Assert.IsNotNull(namespacesForImplementation);
+			XNamespace mva = "clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities";
+			var vbSettings = root.Element(mva + "VisualBasic.Settings");
+			Assert.IsNotNull(vbSettings);
 
-            XNamespace scg = "clr-namespace:System.Collections.Generic;assembly=mscorlib";
-            var nsList = namespacesForImplementation.Element(scg + "List");
-            Assert.IsNotNull(nsList);
+			XNamespace a = "http://schemas.microsoft.com/netfx/2009/xaml/activities";
+			XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
 
-            var actualNamespaces = nsList.Elements(x + "String").Select(e => e.Value).ToList();
-            Assert.IsTrue(ExpectedNamespaces.SequenceEqual(actualNamespaces));
+			var namespacesForImplementation = root.Element(a + "TextExpression.NamespacesForImplementation");
+			Assert.IsNotNull(namespacesForImplementation);
 
-            var referencesForImplementation = root.Element(a + "TextExpression.ReferencesForImplementation");
-            Assert.IsNotNull(referencesForImplementation);
+			XNamespace scg = "clr-namespace:System.Collections.Generic;assembly=mscorlib";
+			var nsList = namespacesForImplementation.Element(scg + "List");
+			Assert.IsNotNull(nsList);
 
-            XNamespace sco = "clr-namespace:System.Collections.ObjectModel;assembly=mscorlib";
-            var asmList = referencesForImplementation.Element(sco + "Collection");
-            Assert.IsNotNull(asmList);
+			var actualNamespaces = nsList.Elements(x + "String").Select(e => e.Value).ToList();
+			Assert.IsTrue(ExpectedNamespaces.SequenceEqual(actualNamespaces));
 
-            var actualAssemblies = asmList.Elements(a + "AssemblyReference").Select(e => e.Value).ToList();
-            Assert.IsTrue(ExpectedAssemblies.SequenceEqual(actualAssemblies));
-        }
+			var referencesForImplementation = root.Element(a + "TextExpression.ReferencesForImplementation");
+			Assert.IsNotNull(referencesForImplementation);
 
-        #endregion
+			XNamespace sco = "clr-namespace:System.Collections.ObjectModel;assembly=mscorlib";
+			var asmList = referencesForImplementation.Element(sco + "Collection");
+			Assert.IsNotNull(asmList);
 
-        #region CompileExpressions
+			var actualAssemblies = asmList.Elements(a + "AssemblyReference").Select(e => e.Value).ToList();
+			Assert.IsTrue(ExpectedAssemblies.SequenceEqual(actualAssemblies));
+		}
 
-        [TestMethod]
-        public void WorkflowHelperCompileExpressionsWithActivityExpectedSetsNamespaces()
-        {
-            var activity = new DynamicActivity();
-            new WorkflowHelper().CompileExpressions(activity);
+		#endregion
 
-            var impl = new AttachableMemberIdentifier(typeof(TextExpression), "NamespacesForImplementation");
+		#region CompileExpressions
 
-            object property;
-            AttachablePropertyServices.TryGetProperty(activity, impl, out property);
+		[TestMethod]
+		public void WorkflowHelperCompileExpressionsWithActivityExpectedSetsNamespaces()
+		{
+			var activity = new DynamicActivity();
+			new WorkflowHelper().CompileExpressions(activity, Guid.NewGuid());
 
-            var namespaces = property as List<string>;
-            if(namespaces != null)
-            {
-                Assert.IsTrue(namespaces.SequenceEqual(ExpectedNamespaces));
-            }
-            else
-            {
-                Assert.Fail();
-            }
-        }
+			var impl = new AttachableMemberIdentifier(typeof(TextExpression), "NamespacesForImplementation");
 
-        //[TestMethod]
-        //public void WorkflowHelperCompileExpressionsWithActivityExpectedFixesExpressions()
-        //{
-        //    const string ExpressionParams = "(\"\",AmbientDataList)";
+			object property;
+			AttachablePropertyServices.TryGetProperty(activity, impl, out property);
 
-        //    var fsa = new DsfFlowSwitchActivity
-        //    {
-        //        ExpressionText = GlobalConstants.InjectedSwitchDataFetchOld + ExpressionParams
-        //    };
-        //    var fda = new DsfFlowDecisionActivity
-        //    {
-        //        ExpressionText = GlobalConstants.InjectedDecisionHandlerOld + ExpressionParams
-        //    };
-        //    var fdv = new VisualBasicValue<Boolean>(GlobalConstants.InjectedDecisionHandlerOld + ExpressionParams);
-        //    var fsv = new VisualBasicValue<string>(GlobalConstants.InjectedSwitchDataFetchOld + ExpressionParams);
+			var namespaces = property as List<string>;
+			if (namespaces != null)
+			{
+				Assert.IsTrue(namespaces.SequenceEqual(ExpectedNamespaces));
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
 
+		//[TestMethod]
+		//public void WorkflowHelperCompileExpressionsWithActivityExpectedFixesExpressions()
+		//{
+		//    const string ExpressionParams = "(\"\",AmbientDataList)";
 
-        //    var startNode = new FlowStep { Action = new CommentActivityForTest() };
-        //    var chart = new Flowchart { StartNode = startNode };
-        //    chart.Nodes.Add(startNode);
-        //    chart.Nodes.Add(new FlowDecision(fda));
-        //    chart.Nodes.Add(new FlowSwitch<string> { Expression = fsa });
-        //    chart.Nodes.Add(new FlowDecision(fdv));
-        //    chart.Nodes.Add(new FlowSwitch<string> { Expression = fsv });
-
-        //    var workflow = new DynamicActivity
-        //    {
-        //        Implementation = () => chart
-        //    };
-
-        //    new WorkflowHelper().CompileExpressions(workflow);
-
-        //    Assert.AreEqual(GlobalConstants.InjectedSwitchDataFetch + ExpressionParams, fsa.ExpressionText);
-        //    Assert.AreEqual(GlobalConstants.InjectedDecisionHandler + ExpressionParams, fda.ExpressionText);
-        //}
-
-        [TestMethod]
-        public void WorkflowHelperCompileExpressionsWithActivityExpectedCompilesExpressions()
-        {
-            const string ExpressionParams = "(\"\",AmbientDataList)";
-
-            var fsa = new DsfFlowSwitchActivity
-            {
-                ExpressionText = GlobalConstants.InjectedSwitchDataFetchOld + ExpressionParams
-            };
-            var fda = new DsfFlowDecisionActivity
-            {
-                ExpressionText = GlobalConstants.InjectedDecisionHandlerOld + ExpressionParams
-            };
-
-            var startNode = new FlowStep { Action = new CommentActivityForTest() };
-            var chart = new Flowchart { StartNode = startNode };
-            chart.Nodes.Add(startNode);
-            chart.Nodes.Add(new FlowDecision(fda));
-            chart.Nodes.Add(new FlowSwitch<string> { Expression = fsa });
+		//    var fsa = new DsfFlowSwitchActivity
+		//    {
+		//        ExpressionText = GlobalConstants.InjectedSwitchDataFetchOld + ExpressionParams
+		//    };
+		//    var fda = new DsfFlowDecisionActivity
+		//    {
+		//        ExpressionText = GlobalConstants.InjectedDecisionHandlerOld + ExpressionParams
+		//    };
+		//    var fdv = new VisualBasicValue<Boolean>(GlobalConstants.InjectedDecisionHandlerOld + ExpressionParams);
+		//    var fsv = new VisualBasicValue<string>(GlobalConstants.InjectedSwitchDataFetchOld + ExpressionParams);
 
 
-            var workflow = new DynamicActivity
-            {
-                Implementation = () => chart
-            };
+		//    var startNode = new FlowStep { Action = new CommentActivityForTest() };
+		//    var chart = new Flowchart { StartNode = startNode };
+		//    chart.Nodes.Add(startNode);
+		//    chart.Nodes.Add(new FlowDecision(fda));
+		//    chart.Nodes.Add(new FlowSwitch<string> { Expression = fsa });
+		//    chart.Nodes.Add(new FlowDecision(fdv));
+		//    chart.Nodes.Add(new FlowSwitch<string> { Expression = fsv });
 
-            new WorkflowHelper().CompileExpressions(workflow);
+		//    var workflow = new DynamicActivity
+		//    {
+		//        Implementation = () => chart
+		//    };
 
-            // No exception thrown means compilation worked
+		//    new WorkflowHelper().CompileExpressions(workflow);
 
-            var compiledExpressionRoot = CompiledExpressionInvoker.GetCompiledExpressionRootForImplementation(workflow) as ICompiledExpressionRoot;
-            Assert.IsNotNull(compiledExpressionRoot);
-        }
+		//    Assert.AreEqual(GlobalConstants.InjectedSwitchDataFetch + ExpressionParams, fsa.ExpressionText);
+		//    Assert.AreEqual(GlobalConstants.InjectedDecisionHandler + ExpressionParams, fda.ExpressionText);
+		//}
 
-        [TestMethod]
-        [ExpectedException(typeof(Exception))]
-        public void WorkflowHelperCompileExpressionsWithActivityNoNamespacesExpectedThrowsCompilerException()
-        {
-            var workflow = new DynamicActivity
-            {
-                Implementation = () => new WriteLine
-                {
-                    // ExpressionText MUST be use a class that is not been referenced!
-                    Text = new CSharpValue<string>("Dev2.Runtime.Utilities.GenerateString(new Random(), 6)")
-                }
-            };
+		[TestMethod]
+		public void WorkflowHelperCompileExpressionsWithActivityExpectedCompilesExpressions()
+		{
+			const string ExpressionParams = "(\"\",AmbientDataList)";
 
-            new WorkflowHelper().CompileExpressions(workflow);
-        }
+			var fsa = new DsfFlowSwitchActivity
+			{
+				ExpressionText = GlobalConstants.InjectedSwitchDataFetchOld + ExpressionParams
+			};
+			var fda = new DsfFlowDecisionActivity
+			{
+				ExpressionText = GlobalConstants.InjectedDecisionHandlerOld + ExpressionParams
+			};
 
-        #endregion
-
-        #region CreateModelService
-
-        static Mock<ModelService> CreateModelService()
-        {
-            var root = new Mock<ModelItem>();
-            root.Setup(r => r.GetCurrentValue()).Returns(new WorkflowHelper().CreateWorkflow("TestWorkflow"));
-
-            var modelService = new Mock<ModelService>();
-            modelService.Setup(s => s.Root).Returns(root.Object);
-
-            return modelService;
-        }
-
-        #endregion
+			var startNode = new FlowStep { Action = new CommentActivityForTest() };
+			var chart = new Flowchart { StartNode = startNode };
+			chart.Nodes.Add(startNode);
+			chart.Nodes.Add(new FlowDecision(fda));
+			chart.Nodes.Add(new FlowSwitch<string> { Expression = fsa });
 
 
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void WorkflowHelperSetPropertiesWithNullExpectedThrowsArgumentNullException()
-        {
-            new WorkflowHelper().SetProperties(null);
-        }
+			var workflow = new DynamicActivity
+			{
+				Implementation = () => chart
+			};
 
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void WorkflowHelperSetVariablesWithNullExpectedThrowsArgumentNullException()
-        {
-            new WorkflowHelper().SetVariables(null);
-        }
-    }
+			new WorkflowHelper().CompileExpressions(workflow, Guid.NewGuid());
 
-    public sealed class CommentActivityForTest : CodeActivity
-    {
+			// No exception thrown means compilation worked
 
-        public string Text { get; set; }
-        protected override void Execute(CodeActivityContext context)
-        {
+			var compiledExpressionRoot = CompiledExpressionInvoker.GetCompiledExpressionRootForImplementation(workflow) as ICompiledExpressionRoot;
+			Assert.IsNotNull(compiledExpressionRoot);
+		}
 
-        }
-    }
+
+		[TestMethod]
+		public void WorkflowHelperCompileExpressionsWithActivityExpectedCompilesExpressionsAddsToCache()
+		{
+			const string ExpressionParams = "(\"\",AmbientDataList)";
+
+			var fsa = new DsfFlowSwitchActivity
+			{
+				ExpressionText = GlobalConstants.InjectedSwitchDataFetchOld + ExpressionParams
+			};
+			var fda = new DsfFlowDecisionActivity
+			{
+				ExpressionText = GlobalConstants.InjectedDecisionHandlerOld + ExpressionParams
+			};
+
+			var startNode = new FlowStep { Action = new CommentActivityForTest() };
+			var chart = new Flowchart { StartNode = startNode };
+			chart.Nodes.Add(startNode);
+			chart.Nodes.Add(new FlowDecision(fda));
+			chart.Nodes.Add(new FlowSwitch<string> { Expression = fsa });
+
+
+			var workflow = new DynamicActivity
+			{
+				Implementation = () => chart
+			};
+
+			new WorkflowHelper().CompileExpressions(workflow, Guid.NewGuid());
+
+			// No exception thrown means compilation worked
+
+			var compiledExpressionRoot = CompiledExpressionInvoker.GetCompiledExpressionRootForImplementation(workflow) as ICompiledExpressionRoot;
+			Assert.AreEqual(GlobalConstants.Resultscache.Count, 1);
+			Assert.IsNotNull(compiledExpressionRoot);
+		}
+
+		[TestMethod]
+		public void WorkflowHelperCompileExpressionsWithActivityExpectedCompilesExpressionsAddsToCacheForNew()
+		{
+			const string ExpressionParams = "(\"\",AmbientDataList)";
+
+			var fsa = new DsfFlowSwitchActivity
+			{
+				ExpressionText = GlobalConstants.InjectedSwitchDataFetchOld + ExpressionParams
+			};
+			var fda = new DsfFlowDecisionActivity
+			{
+				ExpressionText = GlobalConstants.InjectedDecisionHandlerOld + ExpressionParams
+			};
+
+			var startNode = new FlowStep { Action = new CommentActivityForTest() };
+			var chart = new Flowchart { StartNode = startNode };
+			chart.Nodes.Add(startNode);
+			chart.Nodes.Add(new FlowDecision(fda));
+			chart.Nodes.Add(new FlowSwitch<string> { Expression = fsa });
+
+
+			var workflow = new DynamicActivity
+			{
+				Implementation = () => chart
+			};
+
+			new WorkflowHelper().CompileExpressions(workflow, Guid.NewGuid());
+			new WorkflowHelper().CompileExpressions(workflow, Guid.NewGuid());
+			// No exception thrown means compilation worked
+
+			var compiledExpressionRoot = CompiledExpressionInvoker.GetCompiledExpressionRootForImplementation(workflow) as ICompiledExpressionRoot;
+			Assert.AreEqual(GlobalConstants.Resultscache.Count, 2);
+			Assert.IsNotNull(compiledExpressionRoot);
+		}
+
+
+		[TestMethod]
+		public void WorkflowHelperCompileExpressionsWithActivityExpectedCompilesExpressionsAddsToCacheNoDuplicate()
+		{
+			const string ExpressionParams = "(\"\",AmbientDataList)";
+
+			var fsa = new DsfFlowSwitchActivity
+			{
+				ExpressionText = GlobalConstants.InjectedSwitchDataFetchOld + ExpressionParams
+			};
+			var fda = new DsfFlowDecisionActivity
+			{
+				ExpressionText = GlobalConstants.InjectedDecisionHandlerOld + ExpressionParams
+			};
+
+			var startNode = new FlowStep { Action = new CommentActivityForTest() };
+			var chart = new Flowchart { StartNode = startNode };
+			chart.Nodes.Add(startNode);
+			chart.Nodes.Add(new FlowDecision(fda));
+			chart.Nodes.Add(new FlowSwitch<string> { Expression = fsa });
+
+
+			var workflow = new DynamicActivity
+			{
+				Implementation = () => chart
+			};
+			var guid = Guid.NewGuid();
+			new WorkflowHelper().CompileExpressions(workflow, guid);
+			new WorkflowHelper().CompileExpressions(workflow, guid);
+			// No exception thrown means compilation worked
+
+			var compiledExpressionRoot = CompiledExpressionInvoker.GetCompiledExpressionRootForImplementation(workflow) as ICompiledExpressionRoot;
+			Assert.AreEqual(GlobalConstants.Resultscache.Count, 1);
+			Assert.IsNotNull(compiledExpressionRoot);
+		}
+		[TestMethod]
+		public void WorkflowHelperCompileExpressionsWithActivityExpectedCompilesExpressionsAddsToCacheThenInvalidate()
+		{
+			const string ExpressionParams = "(\"\",AmbientDataList)";
+
+			var fsa = new DsfFlowSwitchActivity
+			{
+				ExpressionText = GlobalConstants.InjectedSwitchDataFetchOld + ExpressionParams
+			};
+			var fda = new DsfFlowDecisionActivity
+			{
+				ExpressionText = GlobalConstants.InjectedDecisionHandlerOld + ExpressionParams
+			};
+
+			var startNode = new FlowStep { Action = new CommentActivityForTest() };
+			var chart = new Flowchart { StartNode = startNode };
+			chart.Nodes.Add(startNode);
+			chart.Nodes.Add(new FlowDecision(fda));
+			chart.Nodes.Add(new FlowSwitch<string> { Expression = fsa });
+
+
+			var workflow = new DynamicActivity
+			{
+				Implementation = () => chart
+			};
+			var guid = Guid.NewGuid();
+			new WorkflowHelper().CompileExpressions(workflow, guid);
+
+			// No exception thrown means compilation worked
+
+			var compiledExpressionRoot = CompiledExpressionInvoker.GetCompiledExpressionRootForImplementation(workflow) as ICompiledExpressionRoot;
+			Assert.AreEqual(GlobalConstants.Resultscache.Count, 1);
+			GlobalConstants.InvalidateCache(guid);
+			Assert.AreEqual(GlobalConstants.Resultscache.Count, 0);
+			Assert.IsNotNull(compiledExpressionRoot);
+		}
+
+
+		[TestMethod]
+		[ExpectedException(typeof(Exception))]
+		public void WorkflowHelperCompileExpressionsWithActivityNoNamespacesExpectedThrowsCompilerException()
+		{
+			var workflow = new DynamicActivity
+			{
+				Implementation = () => new WriteLine
+				{
+					// ExpressionText MUST be use a class that is not been referenced!
+					Text = new CSharpValue<string>("Dev2.Runtime.Utilities.GenerateString(new Random(), 6)")
+				}
+			};
+
+			new WorkflowHelper().CompileExpressions(workflow, Guid.NewGuid());
+		}
+
+		#endregion
+
+		#region CreateModelService
+
+		static Mock<ModelService> CreateModelService()
+		{
+			var root = new Mock<ModelItem>();
+			root.Setup(r => r.GetCurrentValue()).Returns(new WorkflowHelper().CreateWorkflow("TestWorkflow"));
+
+			var modelService = new Mock<ModelService>();
+			modelService.Setup(s => s.Root).Returns(root.Object);
+
+			return modelService;
+		}
+
+		#endregion
+
+
+		[TestMethod]
+		[ExpectedException(typeof(ArgumentNullException))]
+		public void WorkflowHelperSetPropertiesWithNullExpectedThrowsArgumentNullException()
+		{
+			new WorkflowHelper().SetProperties(null);
+		}
+
+		[TestMethod]
+		[ExpectedException(typeof(ArgumentNullException))]
+		public void WorkflowHelperSetVariablesWithNullExpectedThrowsArgumentNullException()
+		{
+			new WorkflowHelper().SetVariables(null);
+		}
+	}
+
+	public sealed class CommentActivityForTest : CodeActivity
+	{
+
+		public string Text { get; set; }
+		protected override void Execute(CodeActivityContext context)
+		{
+
+		}
+	}
 }

@@ -39,12 +39,17 @@ namespace Dev2.Tests.Activities.ActivityTests
     [TestClass]
     [ExcludeFromCodeCoverage]
     public class DsfFlowNodeTests : BaseActivityUnitTest
-    {
-        #region Decision Tests
+	{
+		[TestInitialize]
+		public void Init()
+		{
+			GlobalConstants.Resultscache.Clear();
+		}
+		#region Decision Tests
 
-        // 2013.02.13: Ashley Lewis - Bug 8725, Task 8913
-        // 2013.03.03 : Travis - Refactored to properly test logic required
-        [TestMethod]
+		// 2013.02.13: Ashley Lewis - Bug 8725, Task 8913
+		// 2013.03.03 : Travis - Refactored to properly test logic required
+		[TestMethod]
         public void DecisionWithQuotesInScalarExpectedNoUnhandledExceptions()
         {
 
@@ -380,9 +385,9 @@ namespace Dev2.Tests.Activities.ActivityTests
             // we need to set this now ;)
             dataObject.ParentThreadID = 1;
 
-            new WorkflowHelper().CompileExpressions(workflow);
+			new WorkflowHelper().CompileExpressions(workflow, dataObject.ResourceID);
 
-            var actual = string.Empty;
+			var actual = string.Empty;
             var reset = new AutoResetEvent(false);
 
             var inputArgs = new Dictionary<string, object> { { "AmbientDataList", new List<string> { dataObject.DataListID.ToString() } } };
