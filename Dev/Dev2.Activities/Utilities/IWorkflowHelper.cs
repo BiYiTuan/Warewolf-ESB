@@ -25,10 +25,10 @@ namespace Dev2.Utilities
 
         ActivityBuilder EnsureImplementation(ModelService modelService);
 
-		void CompileExpressions(DynamicActivity dynamicActivity, Guid resourceID);
+        void CompileExpressions(DynamicActivity dynamicActivity, Guid resourceID);
 
-		void CompileExpressions<TResult>(DynamicActivity<TResult> dynamicActivity, Guid resourceId);
+        void CompileExpressions<TResult>(DynamicActivity<TResult> dynamicActivity,Guid resourceId);
 
-		StringBuilder SanitizeXaml(StringBuilder workflowXaml);
+        StringBuilder SanitizeXaml(StringBuilder workflowXaml);
     }
 }

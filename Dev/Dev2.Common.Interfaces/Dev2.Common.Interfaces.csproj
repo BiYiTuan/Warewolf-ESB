@@ -135,7 +135,7 @@
     <Compile Include="Core\Graph\IPath.cs" />
     <Compile Include="Core\Graph\IPathSegment.cs" />
     <Compile Include="Core\Graph\OutputFormats.cs" />
-    <Compile Include="DataList\Contract\enTranslationDepth.cs" />
+    <Compile Include="DataListMergeFrequency.cs" />
     <Compile Include="DataList\Contract\IBinaryDataListItem.cs" />
     <Compile Include="Data\IDev2Definition.cs" />
     <Compile Include="Data\IInputOutputViewModel.cs" />
@@ -157,12 +157,16 @@
     <Compile Include="Diagnostics\Debug\IDebugState.cs" />
     <Compile Include="Diagnostics\Debug\IDebugSubItem.cs" />
     <Compile Include="Diagnostics\Debug\IDebugWriter.cs" />
+    <Compile Include="EmitionTypes.cs" />
+    <Compile Include="enDataListMergeTypes.cs" />
+    <Compile Include="enTranslationDepth.cs" />
     <Compile Include="Enums\enRandomType.cs" />
     <Compile Include="Enums\enScriptType.cs" />
     <Compile Include="Enums\PopulateOptions.cs" />
     <Compile Include="Explorer\IExplorerItem.cs" />
     <Compile Include="Hosting\ExecStatus.cs" />
     <Compile Include="Hosting\IHostContext.cs" />
+    <Compile Include="IDSFDataObject.cs" />
     <Compile Include="IFrameworkRepository.cs" />
     <Compile Include="Infrastructure\Communication\IExecuteMessage.cs" />
     <Compile Include="Infrastructure\Events\IEventPublisher.cs" />
@@ -185,7 +189,13 @@
     <Compile Include="Infrastructure\SharedModels\IDbColumnList.cs" />
     <Compile Include="Interfaces\IDev2TOFn.cs" />
     <Compile Include="IPulseLogger.cs" />
+    <Compile Include="IServerController.cs" />
     <Compile Include="IVersionStrategy.cs" />
+    <Compile Include="IWarewolfActivity.cs" />
+    <Compile Include="IWorkflowApplicationFactory.cs" />
+    <Compile Include="IWorkflowExecutionController.cs" />
+    <Compile Include="IWorkspace.cs" />
+    <Compile Include="IWorkspaceItem.cs" />
     <Compile Include="PathOperations\IResult.cs" />
     <Compile Include="Patterns\ISpookyLoadable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -242,6 +252,7 @@
     <Compile Include="Versioning\IServerVersionRepository.cs" />
     <Compile Include="Versioning\IVersionInfo.cs" />
     <Compile Include="Versioning\IVersionRepository.cs" />
+    <Compile Include="WorkspaceItemAction.cs" />
     <Compile Include="Wrappers\IDirectory.cs" />
     <Compile Include="Wrappers\IDirectoryEntry.cs" />
     <Compile Include="Wrappers\IDirectoryEntryFactory.cs" />

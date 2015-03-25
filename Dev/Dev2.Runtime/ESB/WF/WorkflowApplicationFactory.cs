@@ -16,6 +16,8 @@ using System.Linq;
 using System.Runtime.DurableInstancing;
 using System.Threading;
 using Dev2.Common;
+using Dev2.Common.Interfaces;
+using Dev2.Common.Interfaces.Data.TO;
 using Dev2.Common.Interfaces.Diagnostics.Debug;
 using Dev2.DataList.Contract;
 using Dev2.DynamicServices;
@@ -30,15 +32,33 @@ using ServiceStack.Common.Extensions;
 
 namespace Dev2.Runtime.ESB.WF
 {
+    public class WarewolfActivity : IWarewolfActivity<Activity>
+    {
+        public WarewolfActivity(Activity activity)
+        {
+            Activity = activity;
+        }
+
+        public Activity Activity { get; set; }
+    }
     /// <summary>
     /// The class responsible for creating a workflow entry point
     /// </summary>
-    public class WorkflowApplicationFactory
+    public class WorkflowApplicationFactory: IWorkflowApplicationFactory<Activity>
     {
         public static long Balance = 0;
         private DateTime _runTime;
 
-        public ErrorResultTO AllErrors { get; private set; }
+        public IErrorResultTO AllErrors { get; private set; }
+
+        public IDSFDataObject InvokeWorkflow(IWarewolfActivity<Activity> workflowActivity, IDSFDataObject dataTransferObject,
+            IList<object> executionExtensions, Guid instanceId, IWorkspace workspace, string bookmarkName, out IErrorResultTO errors)
+        {
+            errors = new ErrorResultTO();
+            ErrorResultTO errorsTo;
+            return InvokeWorkflow(workflowActivity.Activity, dataTransferObject, executionExtensions, instanceId, workspace,
+                bookmarkName, out errorsTo);
+        }
 
         private static readonly FileSystemInstanceStore InstanceStore = new FileSystemInstanceStore();
 
@@ -53,7 +73,7 @@ namespace Dev2.Runtime.ESB.WF
         /// <param name="bookmarkName">Name of the bookmark.</param>
         /// <param name="errors">The errors.</param>
         /// <returns></returns>
-        public IDSFDataObject InvokeWorkflow(Activity workflowActivity, IDSFDataObject dataTransferObject, IList<object> executionExtensions, Guid instanceId, IWorkspace workspace, string bookmarkName, out ErrorResultTO errors)
+        private IDSFDataObject InvokeWorkflow(Activity workflowActivity, IDSFDataObject dataTransferObject, IList<object> executionExtensions, Guid instanceId, IWorkspace workspace, string bookmarkName, out ErrorResultTO errors)
         {
 
             return InvokeWorkflowImpl(workflowActivity, dataTransferObject, executionExtensions, instanceId, workspace, bookmarkName, dataTransferObject.IsDebug, out errors);
@@ -255,7 +275,7 @@ namespace Dev2.Runtime.ESB.WF
         {
             #region Instance Fields
             private bool _isDisposed;
-            private WorkflowApplicationFactory _owner;
+            private IWorkflowApplicationFactory<Activity> _owner;
             private WorkflowApplication _instance;
             private IWorkspace _workspace;
             private readonly bool _isDebug;
@@ -276,7 +296,7 @@ namespace Dev2.Runtime.ESB.WF
             #endregion
 
             #region Constructor
-            public WorkflowApplicationRun(WorkflowApplicationFactory owner, ManualResetEventSlim waitHandle, IDSFDataObject dataTransferObject, WorkflowApplication instance, IWorkspace workspace, IList<object> executionExtensions, Guid parentWorkflowInstanceId, bool isDebug, ErrorResultTO errors, IExecutionToken executionToken)
+            public WorkflowApplicationRun(IWorkflowApplicationFactory<Activity> owner, ManualResetEventSlim waitHandle, IDSFDataObject dataTransferObject, WorkflowApplication instance, IWorkspace workspace, IList<object> executionExtensions, Guid parentWorkflowInstanceId, bool isDebug, ErrorResultTO errors, IExecutionToken executionToken)
             {
                 _owner = owner;
                 _waitHandle = waitHandle;
@@ -462,8 +482,8 @@ namespace Dev2.Runtime.ESB.WF
 
                                             try
                                             {
-                                                ErrorResultTO invokeErrors;
-                                                _result = _owner.InvokeWorkflow(wfActivity.Value, _result, _executionExtensions, _parentWorkflowInstanceID, _workspace, "dsfResumption", out invokeErrors);
+                                                IErrorResultTO invokeErrors;
+                                                _result = _owner.InvokeWorkflow(new WarewolfActivity(wfActivity.Value), _result, _executionExtensions, _parentWorkflowInstanceID, _workspace, "dsfResumption", out invokeErrors);
                                                 // attach any execution errors
                                                 if(AllErrors != null)
                                                 {

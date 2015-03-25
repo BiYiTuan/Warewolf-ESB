@@ -216,7 +216,6 @@
     <Compile Include="InterfaceImplementors\DsfDataObject.cs" />
     <Compile Include="InterfaceImplementors\FileSystem.cs" />
     <Compile Include="Interfaces\DataListMergeFrequency.cs" />
-    <Compile Include="Interfaces\IDSFDataObject.cs" />
     <Compile Include="Interfaces\IEsbChannel.cs" />
     <Compile Include="Interfaces\IFrameworkDataFormatter.cs" />
     <Compile Include="Interfaces\IFrameworkDuplexCallbackChannel.cs" />

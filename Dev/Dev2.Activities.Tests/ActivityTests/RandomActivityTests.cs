@@ -17,6 +17,7 @@ using System.Globalization;
 using ActivityUnitTests;
 using Dev2.Activities;
 using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.DataList.Contract;
 using Dev2.Common.Interfaces.Enums;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

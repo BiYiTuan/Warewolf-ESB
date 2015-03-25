@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 using Caliburn.Micro;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Core.DynamicServices;
 using Dev2.Communication;
 using Dev2.Runtime.ServiceModel.Data;

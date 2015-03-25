@@ -44,6 +44,8 @@ using Dev2.Runtime.WebServer;
 using Dev2.Services.Security.MoqInstallerActions;
 using Dev2.Workspaces;
 using log4net.Config;
+using Warewolf.Server.AntiCorruptionLayer;
+using Warewolf.Server.Controllers;
 
 // ReSharper disable InconsistentNaming
 namespace Dev2
@@ -301,6 +303,7 @@ namespace Dev2
             }
             XmlConfigurator.ConfigureAndWatch(new FileInfo(settingsConfigFile));
             InitializeCommandLineArguments();
+            CustomContainer.Register<IServerController>(new ServerController(new WorkflowExecutionController()));
         }
 
         #endregion

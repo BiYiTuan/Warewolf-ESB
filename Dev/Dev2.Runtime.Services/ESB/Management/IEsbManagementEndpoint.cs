@@ -11,6 +11,7 @@
 
 using System.Collections.Generic;
 using System.Text;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Patterns;
 using Dev2.DynamicServices;
 using Dev2.Workspaces;

@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Network;
+using Dev2.Common.Interfaces;
 
 // ReSharper disable InconsistentNaming
 namespace Dev2.Core.Tests.Environments

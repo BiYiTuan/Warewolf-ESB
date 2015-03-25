@@ -16,12 +16,12 @@ using System.Reflection;
 using System.Security.Principal;
 using System.Text;
 using System.Xml.Linq;
+using Dev2.Common.Interfaces;
+using Dev2.Common.Interfaces.Data.TO;
 using Dev2.Common.Interfaces.Diagnostics.Debug;
-using Dev2.Data.Enums;
 using Dev2.DataList.Contract;
 using Dev2.Diagnostics.Logging;
 using Dev2.DynamicServices.Objects;
-using Dev2.Web;
 
 // ReSharper disable CheckNamespace
 
@@ -36,7 +36,7 @@ namespace Dev2.DynamicServices
         #region Class Members
 
         private readonly XNamespace _dSfDataObjectNs = XNamespace.Get("http://dev2.co.za/");
-        private ErrorResultTO _errors;
+        private IErrorResultTO _errors;
         private string _parentServiceName = string.Empty;
         private string _parentWorkflowInstanceId = string.Empty;
 
@@ -228,7 +228,7 @@ namespace Dev2.DynamicServices
         public Guid ServerID { get; set; }
         public Guid ResourceID { get; set; }
 
-        public ErrorResultTO Errors
+        public IErrorResultTO Errors
         {
             get { return _errors ?? (_errors = new ErrorResultTO()); }
             set { _errors = value; }

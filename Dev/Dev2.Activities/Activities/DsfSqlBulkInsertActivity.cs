@@ -20,6 +20,7 @@ using Dev2.Activities.Debug;
 using Dev2.Activities.SqlBulkInsert;
 using Dev2.Common;
 using Dev2.Common.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Diagnostics.Debug;
 using Dev2.Data.Factories;
 using Dev2.DataList.Contract;

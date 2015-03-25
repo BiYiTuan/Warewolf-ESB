@@ -15,6 +15,7 @@ using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Enums;
 using Dev2.Data.Translators;
 using Dev2.DataList.Contract;

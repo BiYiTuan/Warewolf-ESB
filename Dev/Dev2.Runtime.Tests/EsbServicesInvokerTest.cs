@@ -19,6 +19,7 @@ using System.Threading;
 using System.Xml.Linq;
 using Dev2.Common;
 using Dev2.Common.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Common.Interfaces.Diagnostics.Debug;
 using Dev2.Communication;
@@ -35,6 +36,7 @@ using Dev2.Workspaces;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Newtonsoft.Json;
+using IWorkspace = Dev2.Common.Interfaces.IWorkspace;
 
 // ReSharper disable InconsistentNaming
 namespace Dev2.Tests.Runtime

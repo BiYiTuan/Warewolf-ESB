@@ -12,6 +12,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Dev2.Common.Interfaces;
 
 namespace Dev2.Workspaces
 {
@@ -88,7 +89,7 @@ namespace Dev2.Workspaces
 
         #region IEquatable
 
-        public bool Equals(IWorkspace other)
+        public bool Equals(Common.Interfaces.IWorkspace other)
         {
             if(other == null)
             {
@@ -104,7 +105,7 @@ namespace Dev2.Workspaces
                 return false;
             }
 
-            var item = obj as IWorkspace;
+            var item = obj as Common.Interfaces.IWorkspace;
             return item != null && Equals(item);
         }
 

@@ -17,12 +17,12 @@ using System.Linq;
 using System.Text;
 using Dev2.Common;
 using Dev2.Common.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Common.Interfaces.DataList.Contract;
 using Dev2.Common.Interfaces.Diagnostics.Debug;
 using Dev2.Common.Interfaces.Enums;
 using Dev2.Data.DataListCache;
-using Dev2.Data.Enums;
 using Dev2.Data.Factories;
 using Dev2.DataList.Contract;
 using Dev2.DataList.Contract.Binary_Objects;
@@ -31,7 +31,6 @@ using Dev2.DynamicServices.Test;
 using Dev2.Server.Datalist;
 using Dev2.Server.DataList;
 using Dev2.Server.DataList.Translators;
-using Dev2.Web;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -1040,7 +1039,7 @@ namespace Dev2.Data.Tests.BinaryDataList
             Guid dlID = _sdlc.ConvertTo(null, xmlFormat, data, "<DataList><scalar1/><scalar3/><rs1><f1/><f2/></rs1><rs2><f1a/></rs2><scalar2/></DataList>".ToStringBuilder(), out errors);
             string error;
 
-            var dataListTranslatedPayloadTo = _sdlc.ConvertFrom(null, dlID, DataList.Contract.enTranslationDepth.Data, DataListFormat.CreateFormat(GlobalConstants._XML), out errors);
+            var dataListTranslatedPayloadTo = _sdlc.ConvertFrom(null, dlID, enTranslationDepth.Data, DataListFormat.CreateFormat(GlobalConstants._XML), out errors);
             string myDate = dataListTranslatedPayloadTo.FetchAsString().ToString();
 
             if(myDate != string.Empty)
@@ -1438,7 +1437,7 @@ namespace Dev2.Data.Tests.BinaryDataList
 
             //------------Assert Results-------------------------
             ErrorResultTO tmpErrors;
-            var results = _sdlc.ConvertFrom(null, shapedOutputID, DataList.Contract.enTranslationDepth.Data,
+            var results = _sdlc.ConvertFrom(null, shapedOutputID, enTranslationDepth.Data,
                                             DataListFormat.CreateFormat(GlobalConstants._XML_Without_SystemTags),
                                             out tmpErrors);
 
@@ -1478,7 +1477,7 @@ namespace Dev2.Data.Tests.BinaryDataList
 
             //------------Assert Results-------------------------
             ErrorResultTO tmpErrors;
-            var results = _sdlc.ConvertFrom(null, shapedOutputID, DataList.Contract.enTranslationDepth.Data,
+            var results = _sdlc.ConvertFrom(null, shapedOutputID, enTranslationDepth.Data,
                                             DataListFormat.CreateFormat(GlobalConstants._XML_Without_SystemTags),
                                             out tmpErrors);
 
@@ -2161,7 +2160,7 @@ namespace Dev2.Data.Tests.BinaryDataList
             data = (TestHelper.ConvertStringToByteArray(strData));
             Guid rightId = _sdlc.ConvertTo(null, xmlFormat, data, "<DataList><nullFlag/><result/></DataList>".ToStringBuilder(), out errors);
             //------------Execute Test---------------------------
-            Guid shapeId = _sdlc.Merge(null, leftId, rightId, enDataListMergeTypes.Intersection, DataList.Contract.enTranslationDepth.Shape, false, out errors);
+            Guid shapeId = _sdlc.Merge(null, leftId, rightId, enDataListMergeTypes.Intersection, enTranslationDepth.Shape, false, out errors);
             //------------Assert Results-------------------------
             Assert.AreNotEqual(Guid.Empty, shapeId);
             Assert.IsFalse(errors.HasErrors());
@@ -2178,7 +2177,7 @@ namespace Dev2.Data.Tests.BinaryDataList
             byte[] data = (TestHelper.ConvertStringToByteArray(strData0));
             Guid leftId = _sdlc.ConvertTo(null, xmlFormat, data, strData0.ToStringBuilder(), out errors);
             //------------Execute Test---------------------------
-            Guid shapeId = _sdlc.Merge(null, leftId, Guid.Empty, enDataListMergeTypes.Intersection, DataList.Contract.enTranslationDepth.Shape, false, out errors);
+            Guid shapeId = _sdlc.Merge(null, leftId, Guid.Empty, enDataListMergeTypes.Intersection, enTranslationDepth.Shape, false, out errors);
             //------------Assert Results-------------------------
             Assert.AreEqual(Guid.Empty, shapeId);
             Assert.IsTrue(errors.HasErrors());
@@ -2195,7 +2194,7 @@ namespace Dev2.Data.Tests.BinaryDataList
             byte[] data = (TestHelper.ConvertStringToByteArray(strData));
             Guid rightId = _sdlc.ConvertTo(null, xmlFormat, data, "<DataList><nullFlag/><result/></DataList>".ToStringBuilder(), out errors);
             //------------Execute Test---------------------------
-            Guid shapeId = _sdlc.Merge(null, Guid.Empty, rightId, enDataListMergeTypes.Intersection, DataList.Contract.enTranslationDepth.Shape, false, out errors);
+            Guid shapeId = _sdlc.Merge(null, Guid.Empty, rightId, enDataListMergeTypes.Intersection, enTranslationDepth.Shape, false, out errors);
             //------------Assert Results-------------------------
             Assert.AreEqual(Guid.Empty, shapeId);
             Assert.IsTrue(errors.HasErrors());
@@ -2215,7 +2214,7 @@ namespace Dev2.Data.Tests.BinaryDataList
             data = (TestHelper.ConvertStringToByteArray(strData));
             Guid rightId = _sdlc.ConvertTo(null, xmlFormat, data, "<DataList><nullFlag/><result/></DataList>".ToStringBuilder(), out errors);
             //------------Execute Test---------------------------
-            var shapeId = _sdlc.ConditionalMerge(null, DataListMergeFrequency.Always, leftId, rightId, DataListMergeFrequency.Always, enDataListMergeTypes.Intersection, DataList.Contract.enTranslationDepth.Shape);
+            var shapeId = _sdlc.ConditionalMerge(null, DataListMergeFrequency.Always, leftId, rightId, DataListMergeFrequency.Always, enDataListMergeTypes.Intersection, enTranslationDepth.Shape);
             //------------Assert Results-------------------------
             Assert.AreNotEqual(Guid.Empty, shapeId);
         }
@@ -2231,7 +2230,7 @@ namespace Dev2.Data.Tests.BinaryDataList
             byte[] data = (TestHelper.ConvertStringToByteArray(strData0));
             Guid leftId = _sdlc.ConvertTo(null, xmlFormat, data, strData0.ToStringBuilder(), out errors);
             //------------Execute Test---------------------------
-            var shapeId = _sdlc.ConditionalMerge(null, DataListMergeFrequency.Always, leftId, Guid.NewGuid(), DataListMergeFrequency.Always, enDataListMergeTypes.Intersection, DataList.Contract.enTranslationDepth.Shape);
+            var shapeId = _sdlc.ConditionalMerge(null, DataListMergeFrequency.Always, leftId, Guid.NewGuid(), DataListMergeFrequency.Always, enDataListMergeTypes.Intersection, enTranslationDepth.Shape);
             //------------Assert Results-------------------------
             Assert.AreNotEqual(Guid.Empty, shapeId);
         }
@@ -2638,7 +2637,7 @@ namespace Dev2.Data.Tests.BinaryDataList
             var binaryDataList = new Mock<IBinaryDataList>();
             dataListServer.Setup(m => m.ReadDatalist(It.IsAny<Guid>(), out errors)).Returns(binaryDataList.Object);
             //------------Execute Test---------------------------
-            var translatedPayloadTO = sdlc.ConvertFrom(null, shapeId, DataList.Contract.enTranslationDepth.Data, xmlFormat, out errors);
+            var translatedPayloadTO = sdlc.ConvertFrom(null, shapeId, enTranslationDepth.Data, xmlFormat, out errors);
             //------------Assert Results-------------------------
             Assert.IsNotNull(translatedPayloadTO);
             Assert.AreEqual(dl, translatedPayloadTO.FetchAsString().ToString());
@@ -2666,7 +2665,7 @@ namespace Dev2.Data.Tests.BinaryDataList
             var binaryDataList = new Mock<IBinaryDataList>();
             dataListServer.Setup(m => m.ReadDatalist(It.IsAny<Guid>(), out errors)).Returns(binaryDataList.Object);
             //------------Execute Test---------------------------
-            var translatedPayloadTO = sdlc.ConvertFrom(null, shapeId, DataList.Contract.enTranslationDepth.Data, xmlFormat, out errors);
+            var translatedPayloadTO = sdlc.ConvertFrom(null, shapeId, enTranslationDepth.Data, xmlFormat, out errors);
             //------------Assert Results-------------------------
             Assert.IsNotNull(translatedPayloadTO);
             Assert.AreEqual(dl, translatedPayloadTO.FetchAsString().ToString());
@@ -2694,7 +2693,7 @@ namespace Dev2.Data.Tests.BinaryDataList
             var binaryDataList = new Mock<IBinaryDataList>();
             dataListServer.Setup(m => m.ReadDatalist(It.IsAny<Guid>(), out errors)).Returns(binaryDataList.Object);
             //------------Execute Test---------------------------
-            var translatedPayloadTO = sdlc.ConvertFrom(null, shapeId, DataList.Contract.enTranslationDepth.Data, xmlFormat, out errors);
+            var translatedPayloadTO = sdlc.ConvertFrom(null, shapeId, enTranslationDepth.Data, xmlFormat, out errors);
             //------------Assert Results-------------------------
             Assert.IsNull(translatedPayloadTO);
             Assert.IsTrue(errors.HasErrors());
@@ -2720,7 +2719,7 @@ namespace Dev2.Data.Tests.BinaryDataList
             dataListServer.Setup(m => m.GetTranslator(xmlFormat)).Returns(translator.Object);
             dataListServer.Setup(m => m.ReadDatalist(It.IsAny<Guid>(), out errors)).Returns((IBinaryDataList)null);
             //------------Execute Test---------------------------
-            var translatedPayloadTO = sdlc.ConvertFrom(null, shapeId, DataList.Contract.enTranslationDepth.Data, xmlFormat, out errors);
+            var translatedPayloadTO = sdlc.ConvertFrom(null, shapeId, enTranslationDepth.Data, xmlFormat, out errors);
             //------------Assert Results-------------------------
             Assert.IsNull(translatedPayloadTO);
             Assert.IsTrue(errors.HasErrors());

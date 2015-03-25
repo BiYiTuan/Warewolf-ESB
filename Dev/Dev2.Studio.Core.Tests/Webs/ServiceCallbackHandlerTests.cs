@@ -16,6 +16,7 @@ using System.Linq.Expressions;
 using System.Text;
 using Caliburn.Micro;
 using Dev2.Collections;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Infrastructure.Providers.Errors;
 using Dev2.Common.Interfaces.Infrastructure.SharedModels;
 using Dev2.Communication;

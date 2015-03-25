@@ -18,6 +18,7 @@ using System.Windows.Input;
 using System.Xml.Linq;
 using Dev2.Common;
 using Dev2.Common.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Data.Binary_Objects;
 using Dev2.Data.Enums;
 using Dev2.Data.Interfaces;

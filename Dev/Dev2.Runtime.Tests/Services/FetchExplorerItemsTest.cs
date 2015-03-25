@@ -24,6 +24,7 @@ using Moq;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Dev2.Common.Interfaces;
 
 // ReSharper disable InconsistentNaming
 namespace Dev2.Tests.Runtime.Services

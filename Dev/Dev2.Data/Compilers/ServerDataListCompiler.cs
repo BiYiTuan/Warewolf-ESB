@@ -15,6 +15,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Common.Interfaces.DataList.Contract;
 using Dev2.Common.Interfaces.Diagnostics.Debug;
@@ -313,7 +314,7 @@ namespace Dev2.Server.Datalist
             {
                 // Ensure we have a non-null tmpDL
 
-                IBinaryDataList result = tmpDl.Clone(Dev2.DataList.Contract.enTranslationDepth.Data, out errors, false);
+                IBinaryDataList result = tmpDl.Clone(enTranslationDepth.Data, out errors, false);
                 if(result != null)
                 {
                     allErrors.MergeErrors(errors);
@@ -698,7 +699,7 @@ namespace Dev2.Server.Datalist
             }
             else
             {
-                IBinaryDataList toPush = tmp.Clone(Dev2.DataList.Contract.enTranslationDepth.Data, out errors, onlySystemTags);
+                IBinaryDataList toPush = tmp.Clone(enTranslationDepth.Data, out errors, onlySystemTags);
                 toPush.ParentUID = curDLID;
                 TryPushDataList(toPush, out error);
                 if(error != string.Empty)
@@ -728,7 +729,7 @@ namespace Dev2.Server.Datalist
                 }
                 else
                 {
-                    tmp = parentDl.Merge(tmp, enDataListMergeTypes.Union, Dev2.DataList.Contract.enTranslationDepth.Data_With_Blank_OverWrite, false, out errors);
+                    tmp = parentDl.Merge(tmp, enDataListMergeTypes.Union, enTranslationDepth.Data_With_Blank_OverWrite, false, out errors);
                     TryPushDataList(tmp, out error);
                     if(error != string.Empty)
                     {
@@ -740,7 +741,7 @@ namespace Dev2.Server.Datalist
             return result;
         }
 
-        public Guid Merge(NetworkContext ctx, Guid leftID, Guid rightID, enDataListMergeTypes mergeType, Dev2.DataList.Contract.enTranslationDepth depth, bool createNewList, out ErrorResultTO errors)
+        public Guid Merge(NetworkContext ctx, Guid leftID, Guid rightID, enDataListMergeTypes mergeType, enTranslationDepth depth, bool createNewList, out ErrorResultTO errors)
         {
 
             string error;
@@ -790,7 +791,7 @@ namespace Dev2.Server.Datalist
 
         public Guid ConditionalMerge(NetworkContext ctx, DataListMergeFrequency conditions,
             Guid destinationDatalistID, Guid sourceDatalistID, DataListMergeFrequency datalistMergeFrequency,
-            enDataListMergeTypes datalistMergeType, Dev2.DataList.Contract.enTranslationDepth datalistMergeDepth)
+            enDataListMergeTypes datalistMergeType, enTranslationDepth datalistMergeDepth)
         {
             Guid mergeId = Guid.Empty;
             if(conditions.HasFlag(datalistMergeFrequency) && destinationDatalistID != Guid.Empty && sourceDatalistID != Guid.Empty)
@@ -997,7 +998,7 @@ namespace Dev2.Server.Datalist
             return returnVal;
         }
 
-        public DataListTranslatedPayloadTO ConvertFrom(NetworkContext ctx, Guid curDLID, Dev2.DataList.Contract.enTranslationDepth depth, DataListFormat typeOf, out ErrorResultTO errors)
+        public DataListTranslatedPayloadTO ConvertFrom(NetworkContext ctx, Guid curDLID, enTranslationDepth depth, DataListFormat typeOf, out ErrorResultTO errors)
         {
             DataListTranslatedPayloadTO returnVal = null;
             ErrorResultTO allErrors = new ErrorResultTO();
@@ -1424,7 +1425,7 @@ namespace Dev2.Server.Datalist
                         if(sysVal == null)
                         {
                             string errorTmp;
-                            sysVal = DataListConstants.baseEntry.Clone(Dev2.DataList.Contract.enTranslationDepth.Shape, pushToId, out errorTmp);
+                            sysVal = DataListConstants.baseEntry.Clone(enTranslationDepth.Shape, pushToId, out errorTmp);
                         }
 
                         UpsertSystemTag(pushToId, t, sysVal, out errors);
@@ -1470,7 +1471,7 @@ namespace Dev2.Server.Datalist
                     if(val == null)
                     {
                         string errorTmp;
-                        val = DataListConstants.baseEntry.Clone(Dev2.DataList.Contract.enTranslationDepth.Shape, pushToId, out errorTmp);
+                        val = DataListConstants.baseEntry.Clone(enTranslationDepth.Shape, pushToId, out errorTmp);
                         allErrors.AddError(errorTmp);
                     }
 
@@ -1977,7 +1978,7 @@ namespace Dev2.Server.Datalist
             {
                 if(bdl.TryGetEntry(field, out val, out error))
                 {
-                    result = val.Clone(Dev2.DataList.Contract.enTranslationDepth.Data, bdl.UID, out error);
+                    result = val.Clone(enTranslationDepth.Data, bdl.UID, out error);
                 }
 
                 errors.AddError(error);
@@ -1996,7 +1997,7 @@ namespace Dev2.Server.Datalist
                 if(idxType == enRecordsetIndexType.Numeric || idxType == enRecordsetIndexType.Blank)
                 {
                     int myIdx = idxType == enRecordsetIndexType.Numeric ? Int32.Parse(idx) : val.FetchLastRecordsetIndex();
-                    var res = val.Clone(Dev2.DataList.Contract.enTranslationDepth.Shape, bdl.UID, out error);
+                    var res = val.Clone(enTranslationDepth.Shape, bdl.UID, out error);
                     res.MakeRecordsetEvaluateReady(myIdx, colsToKeep, out error);
                     errors.AddError(error);
 
@@ -2011,7 +2012,7 @@ namespace Dev2.Server.Datalist
 
                 if(idxType == enRecordsetIndexType.Star)
                 {
-                    var res = val.Clone(Dev2.DataList.Contract.enTranslationDepth.Shape, bdl.UID, out error);
+                    var res = val.Clone(enTranslationDepth.Shape, bdl.UID, out error);
                     res.MakeRecordsetEvaluateReady(GlobalConstants.AllIndexes, colsToKeep, out error);
                     errors.AddError(error);
 
@@ -2154,12 +2155,12 @@ namespace Dev2.Server.Datalist
                         if(part.Option.IsScalar)
                         {
                             bdl.TryGetEntry(field, out tmpEntry, out error);
-                            leftSide = tmpEntry.Clone(Dev2.DataList.Contract.enTranslationDepth.Data, Guid.NewGuid(), out error);
+                            leftSide = tmpEntry.Clone(enTranslationDepth.Data, Guid.NewGuid(), out error);
                         }
                         else
                         {
                             bdl.TryGetEntry(part.Option.Recordset, out tmpEntry, out error);
-                            leftSide = tmpEntry.Clone(Dev2.DataList.Contract.enTranslationDepth.Data, Guid.NewGuid(), out error);
+                            leftSide = tmpEntry.Clone(enTranslationDepth.Data, Guid.NewGuid(), out error);
                         }
                         debugTO.LeftEntry = leftSide;
                         debugTO.LeftEntry.ComplexExpressionAuditor = new ComplexExpressionAuditor();
@@ -2571,7 +2572,7 @@ namespace Dev2.Server.Datalist
 
             if(payload.IsDebug && entry != null)
             {
-                debugTO.TargetEntry = entry.Clone(Dev2.DataList.Contract.enTranslationDepth.Data, Guid.NewGuid(), out error);
+                debugTO.TargetEntry = entry.Clone(enTranslationDepth.Data, Guid.NewGuid(), out error);
             }
 
             if(evaluatedValue == null && entry != null)

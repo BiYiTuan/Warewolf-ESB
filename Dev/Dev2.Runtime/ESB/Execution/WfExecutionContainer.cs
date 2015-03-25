@@ -14,7 +14,9 @@ using System.Activities;
 using System.Collections.Generic;
 using Dev2.Activities.Debug;
 using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data;
+using Dev2.Common.Interfaces.Data.TO;
 using Dev2.Common.Interfaces.Diagnostics.Debug;
 using Dev2.DataList.Contract;
 using Dev2.DataList.Contract.Binary_Objects;
@@ -52,7 +54,9 @@ namespace Dev2.Runtime.ESB.Execution
         public override Guid Execute(out ErrorResultTO errors)
         {
             errors = new ErrorResultTO();
-            WorkflowApplicationFactory wfFactor = new WorkflowApplicationFactory();
+            var errorsTo = (IErrorResultTO) errors;
+            var wfFactor =
+                CustomContainer.Get<IServerController>().GetWorkflowApplicationFactory<Activity>();
             Guid result = GlobalConstants.NullDataListID;
 
             // set current bookmark as per DataObject ;)
@@ -96,13 +100,13 @@ namespace Dev2.Runtime.ESB.Execution
             try
             {
                 var theActivity = activity.Value as DynamicActivity;
+          
+                // BUG 9304 - 2013.05.08 - TWR - Added CompileExpressions
+                _workflowHelper.CompileExpressions(theActivity,DataObject.ResourceID);
 
-				// BUG 9304 - 2013.05.08 - TWR - Added CompileExpressions
-				_workflowHelper.CompileExpressions(theActivity, DataObject.ResourceID);
-
-				IDSFDataObject exeResult = wfFactor.InvokeWorkflow(activity.Value, DataObject,
+                IDSFDataObject exeResult = wfFactor.InvokeWorkflow(new WarewolfActivity(activity.Value), DataObject,
                                                                    new List<object> { EsbChannel, }, instanceId,
-                                                                   TheWorkspace, bookmark, out errors);
+                                                                   TheWorkspace, bookmark, out errorsTo);
 
                 result = exeResult.DataListID;
             }

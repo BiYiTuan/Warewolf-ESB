@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using Dev2.Common.Interfaces;
 
 namespace Dev2.Tests.Runtime.Services
 {

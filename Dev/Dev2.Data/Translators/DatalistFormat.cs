@@ -11,7 +11,7 @@
 
 using System;
 using System.Collections.Generic;
-using Dev2.Web;
+using Dev2.Common.Interfaces;
 
 namespace Dev2.DataList.Contract
 {

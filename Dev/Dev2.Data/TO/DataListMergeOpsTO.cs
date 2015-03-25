@@ -10,6 +10,7 @@
 */
 
 using System;
+using Dev2.Common.Interfaces;
 using Dev2.Data.Enums;
 using Dev2.DataList.Contract;
 

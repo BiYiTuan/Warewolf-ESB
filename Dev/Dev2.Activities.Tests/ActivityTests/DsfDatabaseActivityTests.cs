@@ -11,6 +11,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Dev2.Activities;
+using Dev2.Common.Interfaces;
 using Dev2.DataList.Contract;
 using Dev2.Services.Execution;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

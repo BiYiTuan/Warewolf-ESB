@@ -10,6 +10,7 @@
 */
 
 
+using Dev2.Common.Interfaces;
 using Dev2.DynamicServices;
 using Dev2.Runtime.ESB.Control;
 using Dev2.Workspaces;

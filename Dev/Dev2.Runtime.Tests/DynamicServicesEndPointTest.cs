@@ -23,6 +23,7 @@ using Dev2.Runtime.Hosting;
 using Dev2.Tests.Runtime.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Dev2.Common;
+using Dev2.Common.Interfaces;
 
 namespace Dev2.Tests.Runtime
 {

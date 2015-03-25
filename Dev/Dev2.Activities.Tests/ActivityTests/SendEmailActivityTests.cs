@@ -16,6 +16,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.Mail;
 using ActivityUnitTests;
 using Dev2.Activities;
+using Dev2.Common.Interfaces;
 using Dev2.DataList.Contract;
 using Dev2.Enums;
 using Dev2.Runtime.Hosting;

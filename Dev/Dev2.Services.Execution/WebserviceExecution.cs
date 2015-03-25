@@ -9,6 +9,7 @@
 */
 
 using System;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Core.Graph;
 using Dev2.Data.Util;
 using Dev2.DataList.Contract;

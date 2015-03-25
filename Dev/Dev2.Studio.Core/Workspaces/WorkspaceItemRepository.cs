@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Dev2.Common.Interfaces;
 using Dev2.Communication;
 using Dev2.Controller;
 using Dev2.Studio.Core.AppResources.Enums;

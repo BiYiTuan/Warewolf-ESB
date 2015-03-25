@@ -17,6 +17,7 @@ using System.Linq;
 using System.Net.Mail;
 using Dev2.Activities.Debug;
 using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Diagnostics.Debug;
 using Dev2.Data.Enums;
 using Dev2.Data.Factories;

@@ -323,11 +323,7 @@
     <Compile Include="ServiceModel\WebModel.cs" />
     <Compile Include="Workspaces\Workspace.cs" />
     <Compile Include="Workspaces\WorkspaceItem.cs" />
-    <Compile Include="Workspaces\WorkspaceItemAction.cs" />
-    <Compile Include="Workspaces\IWorkspace.cs" />
-    <Compile Include="Workspaces\IWorkspaceItem.cs" />
     <Compile Include="Workspaces\IWorkspaceRepository.cs" />
-    <Compile Include="Workspaces\IWorkspace_Server.cs" />
     <Compile Include="Workspaces\WorkspaceRepository.cs" />
     <Compile Include="Workspaces\Workspace_Server.cs" />
   </ItemGroup>

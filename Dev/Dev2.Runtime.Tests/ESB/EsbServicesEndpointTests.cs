@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Communication;
 using Dev2.Data.ServiceModel;
