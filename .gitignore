@@ -227,6 +227,8 @@
 /Dev/Warewolf.Studio.CustomControls.Tests/obj
 /Dev/Warewolf.Server.AntiCorruptionLayer/bin
 /Dev/Warewolf.Server.AntiCorruptionLayer/obj
+/Dev/Warewolf.Server.Controllers/bin
+/Dev/Warewolf.Server.Controllers/obj
 
 ####################################################################################
 # These release workflows must be stored in "/Dev/BPM Resources - Release/Resources" ONLY!

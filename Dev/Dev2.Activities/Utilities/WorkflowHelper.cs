@@ -26,6 +26,7 @@ using System.Xaml;
 using Dev2.Common;
 using Dev2.Common.Common;
 using Dev2.Data.Decision;
+using Dev2.Runtime.Configuration.Settings;
 using Microsoft.VisualBasic.Activities;
 using Unlimited.Applications.BusinessDesignStudio.Activities;
 
@@ -153,8 +154,6 @@ namespace Dev2.Utilities
             }
         }
 
-
- 
         /// <summary>
         /// Only invoke from the server!
         /// </summary>
@@ -336,15 +335,12 @@ namespace Dev2.Utilities
 
         void FixExpressions(Flowchart chart, bool isServerInvocation = false)
         {
-            foreach(FlowNode node in chart.Nodes)
+            foreach(var node in chart.Nodes)
             {
-
                 var fd = node as FlowDecision;
-               
                 if(fd != null)
                 {
                     var decisionActivity = fd.Condition as DsfFlowDecisionActivity;
-                    
                     //TryFixExpression(decisionActivity, GlobalConstants.InjectedDecisionHandlerOld, GlobalConstants.InjectedDecisionHandler);
                     if(isServerInvocation)
                     {

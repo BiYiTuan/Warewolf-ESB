@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
+using Dev2.Common.Interfaces;
 using Unlimited.Framework.Converters.Graph.Ouput;
 
 // ReSharper disable InconsistentNaming

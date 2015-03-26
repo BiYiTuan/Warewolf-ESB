@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using Dev2.Activities.Specs.BaseTypes;
+using Dev2.Common.Interfaces;
 using Dev2.Data.Util;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TechTalk.SpecFlow;

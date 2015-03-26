@@ -18,6 +18,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Core.Graph;
 using Dev2.DataList.Contract;
 using Dev2.Runtime.ServiceModel;

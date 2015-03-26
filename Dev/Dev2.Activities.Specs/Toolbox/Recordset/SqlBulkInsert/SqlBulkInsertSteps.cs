@@ -19,6 +19,7 @@ using System.Linq;
 using ActivityUnitTests;
 using Dev2.Common;
 using Dev2.Common.Common;
+using Dev2.Common.Interfaces;
 using Dev2.DataList.Contract;
 using Dev2.Integration.Tests.Services.Sql;
 using Dev2.Runtime.Hosting;
@@ -26,6 +27,8 @@ using Dev2.Runtime.ServiceModel.Data;
 using Dev2.TO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TechTalk.SpecFlow;
+using Warewolf.Server.AntiCorruptionLayer;
+using Warewolf.Server.Controllers;
 
 namespace Dev2.Activities.Specs.Toolbox.Recordset.SqlBulkInsert
 {
@@ -34,9 +37,11 @@ namespace Dev2.Activities.Specs.Toolbox.Recordset.SqlBulkInsert
     {
         public void SetupScenerio()
         {
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+            CustomContainer.Register<IServerController>(controller);
             var sqlBulkInsert = new DsfSqlBulkInsertActivity();
             var dbSource = SqlServerTests.CreateDev2TestingDbSource();
-            ResourceCatalog.Instance.SaveResource(Guid.Empty, dbSource);
+            Common.CustomContainer.Get<IServerController>().GetResourceCatalog().SaveResource(Guid.Empty, dbSource);
             ScenarioContext.Current.Add("dbSource", dbSource);
             sqlBulkInsert.Database = dbSource;
             sqlBulkInsert.TableName = "SqlBulkInsertSpecFlowTestTable_for_" + ScenarioContext.Current.ScenarioInfo.Title.Replace(' ', '_');

@@ -10,6 +10,7 @@
 */
 
 
+using Dev2.Common.Interfaces;
 using Dev2.Runtime.Hosting;
 using Dev2.Runtime.Security;
 using Dev2.Runtime.ServiceModel.Esb.Brokers;

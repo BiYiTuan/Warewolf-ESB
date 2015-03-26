@@ -21,6 +21,8 @@ using Dev2.PathOperations;
 using TechTalk.SpecFlow;
 using Unlimited.Applications.BusinessDesignStudio.Activities;
 using System.Threading.Tasks;
+using Dev2.Common.Interfaces;
+
 namespace Dev2.Activities.Specs.Toolbox.FileAndFolder.Unzip
 {
     [Binding]

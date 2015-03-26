@@ -14,6 +14,7 @@ using System;
 using System.Activities.Statements;
 using Dev2.Activities.Specs.BaseTypes;
 using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Core.Graph;
 using Dev2.DataList.Contract;
 using Dev2.Runtime.Hosting;
@@ -22,6 +23,8 @@ using Dev2.Runtime.ServiceModel.Data;
 using Dev2.Tests.Activities.XML;
 using Moq;
 using TechTalk.SpecFlow;
+using Warewolf.Server.AntiCorruptionLayer;
+using Warewolf.Server.Controllers;
 
 namespace Dev2.Activities.Specs.Toolbox.Resources.Service.WebService
 {
@@ -63,13 +66,15 @@ namespace Dev2.Activities.Specs.Toolbox.Resources.Service.WebService
 
         protected override void BuildDataList()
         {
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+            CustomContainer.Register<IServerController>(controller);
             ErrorResultTO errors;
             var compiler = DataListFactory.CreateDataListCompiler();
             var webService = ScenarioContext.Current.Get<Runtime.ServiceModel.Data.WebService>("WebService");
             webService.ResourceID = Guid.NewGuid();
             webService.ResourceName = "Google Maps Service";
-            ResourceCatalog.Instance.SaveResource(Guid.Empty, webService.Source);
-            ResourceCatalog.Instance.SaveResource(Guid.Empty, webService);
+            Common.CustomContainer.Get<IServerController>().GetResourceCatalog().SaveResource(Guid.Empty, webService.Source);
+            Common.CustomContainer.Get<IServerController>().GetResourceCatalog().SaveResource(Guid.Empty, webService);
             var shape = compiler.ShapeDev2DefinitionsToDataList(webService.OutputSpecification, enDev2ArgumentType.Output, false, out errors);
 
             var dataListId = compiler.ConvertTo(DataListFormat.CreateFormat(GlobalConstants._XML), "", shape, out errors);

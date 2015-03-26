@@ -14,12 +14,15 @@ using System;
 using System.Activities.Statements;
 using System.Collections.Generic;
 using Dev2.Activities.Specs.BaseTypes;
+using Dev2.Common.Interfaces;
 using Dev2.Data.Util;
 using Dev2.Runtime.Hosting;
 using Dev2.Runtime.ServiceModel.Data;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using netDumbster.smtp;
 using TechTalk.SpecFlow;
+using Warewolf.Server.AntiCorruptionLayer;
+using Warewolf.Server.Controllers;
 
 namespace Dev2.Activities.Specs.Toolbox.Utility.Email
 {
@@ -56,7 +59,8 @@ namespace Dev2.Activities.Specs.Toolbox.Utility.Email
 
             var server = SimpleSmtpServer.Start(25);
             ScenarioContext.Current.Add("server", server);
-
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController()); 
+                CustomContainer.Register<IServerController>(controller);
             var selectedEmailSource = new EmailSource
             {
                 Host = "localhost",
@@ -66,7 +70,7 @@ namespace Dev2.Activities.Specs.Toolbox.Utility.Email
                 ResourceName = Guid.NewGuid().ToString(),
                 ResourceID = Guid.NewGuid()
             };
-            ResourceCatalog.Instance.SaveResource(Guid.Empty, selectedEmailSource);
+            CustomContainer.Get<IServerController>().GetResourceCatalog().SaveResource(Guid.Empty, selectedEmailSource);
             var sendEmail = new DsfSendEmailActivity
                 {
                     Result = ResultVariable,

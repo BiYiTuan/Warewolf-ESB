@@ -17,6 +17,7 @@ using Unlimited.Applications.BusinessDesignStudio.Activities;
 using System;
 using System.IO;
 using System.DirectoryServices.ActiveDirectory;
+using Dev2.Common.Interfaces;
 
 namespace Dev2.Activities.Specs.Toolbox.FileAndFolder.Read_File
 {

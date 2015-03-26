@@ -462,6 +462,14 @@
       <Project>{a58b157b-960b-4e84-8957-24e4884c5c77}</Project>
       <Name>Dev2.Studio.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Warewolf.Server.AntiCorruptionLayer\Warewolf.Server.AntiCorruptionLayer.csproj">
+      <Project>{ec18fe7a-cb08-4e4a-b8ae-8fac1aacc24d}</Project>
+      <Name>Warewolf.Server.AntiCorruptionLayer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Warewolf.Server.Controllers\Warewolf.Server.Controllers.csproj">
+      <Project>{bebe01bc-d343-4d60-9175-1ad5134bbeb3}</Project>
+      <Name>Warewolf.Server.Controllers</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Server Test\Workspace\XML\Google_Address_Lookup.xml" />

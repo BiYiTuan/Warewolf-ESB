@@ -15,6 +15,7 @@ using System.Activities.Statements;
 using System.Collections.Generic;
 using System.ComponentModel;
 using Dev2.Activities.Specs.BaseTypes;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Enums;
 using Dev2.Data.Util;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

@@ -15,6 +15,7 @@ using System.Activities.Statements;
 using System.Collections.Generic;
 using Dev2.Activities.Specs.BaseTypes;
 using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Data.Decision;
 using Dev2.Data.Decisions.Operations;
 using Dev2.Data.SystemTemplates.Models;

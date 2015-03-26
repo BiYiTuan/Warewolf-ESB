@@ -38,6 +38,7 @@ using Moq;
 using Unlimited.Applications.BusinessDesignStudio.Activities;
 using Warewolf.Server.AntiCorruptionLayer;
 using Warewolf.Server.Controllers;
+using CustomContainer = Dev2.Common.CustomContainer;
 
 // ReSharper disable CheckNamespace
 namespace ActivityUnitTests
