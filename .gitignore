@@ -12,6 +12,7 @@
 *.ide
 *.bkp
 *.cache
+*.REMOVED.git-id
 
 ####################################################################################
 # Build working directories
@@ -229,6 +230,8 @@
 /Dev/Warewolf.Server.AntiCorruptionLayer/obj
 /Dev/Warewolf.Server.Controllers/bin
 /Dev/Warewolf.Server.Controllers/obj
+/Dev/WarewolfLanguageParser/bin
+/Dev/WarewolfLanguageParser/obj
 
 ####################################################################################
 # These release workflows must be stored in "/Dev/BPM Resources - Release/Resources" ONLY!
