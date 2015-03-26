@@ -18,6 +18,7 @@ using System.Diagnostics.CodeAnalysis;
 using ActivityUnitTests;
 using Dev2.Activities;
 using Dev2.Activities.SqlBulkInsert;
+using Dev2.Common;
 using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Enums;
 using Dev2.DataList.Contract;
@@ -27,6 +28,8 @@ using Dev2.Runtime.ServiceModel.Data;
 using Dev2.TO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Warewolf.Server.AntiCorruptionLayer;
+using Warewolf.Server.Controllers;
 
 // ReSharper disable InconsistentNaming
 namespace Dev2.Tests.Activities.ActivityTests
@@ -212,7 +215,10 @@ namespace Dev2.Tests.Activities.ActivityTests
         {
             var resourceID = Guid.NewGuid();
             var dbSource = new DbSource { ResourcePath = "SQL Tests\\" + resourceID, ResourceName = resourceID.ToString(), ResourceID = resourceID };
-            ResourceCatalog.Instance.SaveResource(Guid.Empty, dbSource);
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+            CustomContainer.Register<IServerController>(controller);
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
+            resourceCatalog.SaveResource(Guid.Empty, dbSource);
             return dbSource;
         }
 

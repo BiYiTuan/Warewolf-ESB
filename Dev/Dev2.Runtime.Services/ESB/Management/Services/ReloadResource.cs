@@ -18,7 +18,6 @@ using Dev2.Common.Interfaces.Core.DynamicServices;
 using Dev2.Communication;
 using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
-using Dev2.Runtime.Hosting;
 using Dev2.Runtime.Security;
 using Dev2.Workspaces;
 
@@ -34,14 +33,14 @@ namespace Dev2.Runtime.ESB.Management.Services
 
             ExecuteMessage result = new ExecuteMessage { HasError = false };
 
-            string resourceID = null;
+            string resourceId = null;
             string resourceType = null;
 
             StringBuilder tmp;
             values.TryGetValue("ResourceID", out tmp);
             if(tmp != null)
             {
-                resourceID = tmp.ToString();
+                resourceId = tmp.ToString();
             }
 
             values.TryGetValue("ResourceType", out tmp);
@@ -49,13 +48,13 @@ namespace Dev2.Runtime.ESB.Management.Services
             {
                 resourceType = tmp.ToString();
             }
-            Dev2Logger.Log.Info(String.Format("Reload Resource. Id:{0} Type:{1}",resourceID,resourceType));
+            Dev2Logger.Log.Info(String.Format("Reload Resource. Id:{0} Type:{1}",resourceId,resourceType));
             try
             {
                 // 2012.10.01: TWR - 5392 - Server does not dynamically reload resources 
-                if(resourceID == "*")
+                if(resourceId == "*")
                 {
-                    ResourceCatalog.Instance.LoadWorkspace(theWorkspace.ID);
+                    CustomContainer.Get<IServerController>().GetResourceCatalog().LoadWorkspace(theWorkspace.ID);
                 }
                 else
                 {
@@ -82,14 +81,14 @@ namespace Dev2.Runtime.ESB.Management.Services
                         default:
                             throw new Exception("Unexpected resource type '" + resourceType + "'.");
                     }
-                    Guid getID;
-                    if(resourceID != null && Guid.TryParse(resourceID, out getID))
+                    Guid getId;
+                    if(resourceId != null && Guid.TryParse(resourceId, out getId))
                     {
                         //
                         // Copy the file from the server workspace into the current workspace
                         //
                         theWorkspace.Update(
-                            new WorkspaceItem(theWorkspace.ID, HostSecurityProvider.Instance.ServerID, Guid.Empty, getID)
+                            new WorkspaceItem(theWorkspace.ID, HostSecurityProvider.Instance.ServerID, Guid.Empty, getId)
                             {
                                 Action = WorkspaceItemAction.Edit,
                                 IsWorkflowSaved = true,
@@ -103,7 +102,7 @@ namespace Dev2.Runtime.ESB.Management.Services
                             new WorkspaceItem(theWorkspace.ID, HostSecurityProvider.Instance.ServerID, Guid.Empty, Guid.Empty)
                             {
                                 Action = WorkspaceItemAction.Edit,
-                                ServiceName = resourceID,
+                                ServiceName = resourceId,
                                 IsWorkflowSaved = true,
                                 ServiceType = serviceType.ToString()
                             }, false);
@@ -111,13 +110,13 @@ namespace Dev2.Runtime.ESB.Management.Services
                     //
                     // Reload resources
                     //
-                    ResourceCatalog.Instance.LoadWorkspace(theWorkspace.ID);
-                    result.SetMessage(string.Concat("'", resourceID, "' Reloaded..."));
+                    CustomContainer.Get<IServerController>().GetResourceCatalog().LoadWorkspace(theWorkspace.ID);
+                    result.SetMessage(string.Concat("'", resourceId, "' Reloaded..."));
                 }
             }
             catch(Exception ex)
             {
-                result.SetMessage(string.Concat("Error reloading '", resourceID, "'..."));
+                result.SetMessage(string.Concat("Error reloading '", resourceId, "'..."));
                 Dev2Logger.Log.Error(ex);
             }
 

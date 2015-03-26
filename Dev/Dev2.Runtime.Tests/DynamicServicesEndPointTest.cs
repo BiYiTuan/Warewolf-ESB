@@ -24,6 +24,7 @@ using Dev2.Tests.Runtime.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Dev2.Common;
 using Dev2.Common.Interfaces;
+using Moq;
 
 namespace Dev2.Tests.Runtime
 {
@@ -86,8 +87,11 @@ namespace Dev2.Tests.Runtime
                out resources,
                null,
                new[] { _serviceId });
-
-            ResourceCatalog.Instance.LoadWorkspace(_workspaceId);
+            var resourceCatalog = new ResourceCatalog();
+            var mockResourceCatalogController = new Mock<IResourceCatalogController>();
+            mockResourceCatalogController.Setup(controller => controller.GetResourceCatalog()).Returns(resourceCatalog);
+            CustomContainer.Register(mockResourceCatalogController.Object);
+            resourceCatalog.LoadWorkspace(_workspaceId);
 
         }
         #endregion
@@ -98,6 +102,10 @@ namespace Dev2.Tests.Runtime
         [TestMethod]
         public void CheckOutputFormatOfDataListForViewInBrowserForAllInputRegions()
         {
+            var resourceCatalog = new ResourceCatalog();
+            var mockController = new Mock<IServerController>();
+            mockController.Setup(controller => controller.GetResourceCatalog()).Returns(resourceCatalog);
+            CustomContainer.Register(mockController.Object);
             IDataListCompiler comp = DataListFactory.CreateDataListCompiler();
             ErrorResultTO errors;
             Guid dlId = comp.ConvertTo(DataListFormat.CreateFormat(GlobalConstants._XML), string.Empty, ServiceShape.ToStringBuilder(), out errors);
@@ -152,7 +160,11 @@ namespace Dev2.Tests.Runtime
             IDataListCompiler comp = DataListFactory.CreateDataListCompiler();
             ErrorResultTO errors;
             Guid dlId = comp.ConvertTo(DataListFormat.CreateFormat(GlobalConstants._XML), string.Empty.ToStringBuilder(), ServiceShape.ToStringBuilder(), out errors);
-            var resource = ResourceCatalog.Instance.GetResource(_workspaceId, ServiceName);
+            var resourceCatalog = new ResourceCatalog();
+            var mockController = new Mock<IServerController>();
+            mockController.Setup(controller => controller.GetResourceCatalog()).Returns(resourceCatalog);
+            CustomContainer.Register(mockController.Object);
+            var resource = resourceCatalog.GetResource(_workspaceId, ServiceName);
             IDSFDataObject dataObj = new DsfDataObject(string.Empty, dlId) { WorkspaceID = _workspaceId, DataListID = dlId, ServiceName = ServiceName, ResourceID = resource.ResourceID };
             EsbServicesEndpoint endPoint = new EsbServicesEndpoint();
             string result = endPoint.FetchExecutionPayload(dataObj, DataListFormat.CreateFormat(GlobalConstants._XML_Without_SystemTags), out errors);

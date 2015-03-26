@@ -14,11 +14,14 @@ using System;
 using System.Collections.Specialized;
 using System.Security.Principal;
 using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Communication;
 using Dev2.Runtime.WebServer;
 using Dev2.Runtime.WebServer.Handlers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Warewolf.Server.AntiCorruptionLayer;
+using Warewolf.Server.Controllers;
 
 namespace Dev2.Tests.Runtime.WebServer
 {
@@ -96,6 +99,8 @@ namespace Dev2.Tests.Runtime.WebServer
         public void InternalServiceRequestHandler_ProcessRequest_WhenPassingInUserContext_ExpectThreadHasCorrectUserContext()
         {
             //------------Setup for test--------------------------
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+            CustomContainer.Register<IServerController>(controller);
             Mock<IPrincipal> principle = new Mock<IPrincipal>();
             principle.Setup(p => p.Identity.Name).Returns("FakeUser");
             principle.Setup(p => p.Identity.Name).Verifiable();

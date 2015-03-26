@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using Dev2.Common;
 using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Communication;
@@ -24,6 +25,8 @@ using Dev2.Runtime.Hosting;
 using Dev2.Workspaces;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Warewolf.Server.AntiCorruptionLayer;
+using Warewolf.Server.Controllers;
 
 namespace Dev2.Tests.Runtime.ESB
 {
@@ -37,6 +40,8 @@ namespace Dev2.Tests.Runtime.ESB
         public void EsbServicesEndpoint_ExecuteSubRequest_IsRemoteWorkflowWhenRemoteExecutionInLocalContext_ExpectTrue()
         {
             //------------Setup for test--------------------------
+             var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+            CustomContainer.Register<IServerController>(controller);
             IDSFDataObject dataObject = new DsfDataObject(string.Empty, Guid.NewGuid());
             dataObject.EnvironmentID = Guid.NewGuid();
             dataObject.IsRemoteInvokeOverridden = true;
@@ -67,6 +72,8 @@ namespace Dev2.Tests.Runtime.ESB
         public void EsbServicesEndpoint_ExecuteSubRequest_SetServiceName()
         {
             //------------Setup for test--------------------------
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+            CustomContainer.Register<IServerController>(controller);
             IDSFDataObject dataObject = new DsfDataObject(string.Empty, Guid.NewGuid());
             dataObject.EnvironmentID = Guid.NewGuid();
             dataObject.IsRemoteInvokeOverridden = false;
@@ -99,6 +106,8 @@ namespace Dev2.Tests.Runtime.ESB
         public void EsbServicesEndpoint_ExecuteSubRequest_IsRemoteWorkflowWhenRemoteExecutionInRemoteContext_ExpectFalse()
         {
             //------------Setup for test--------------------------
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+            CustomContainer.Register<IServerController>(controller);
             IDSFDataObject dataObject = new DsfDataObject(string.Empty, Guid.NewGuid());
             dataObject.EnvironmentID = Guid.NewGuid();
 
@@ -136,6 +145,8 @@ namespace Dev2.Tests.Runtime.ESB
         void Verify_ExecuteSubRequest_IsRemoteWorkflow_InvokesGenerateInvokeContainerCorrectly(bool isRemoteWorkflow, string remoteInvokerID, bool expectedIsLocal)
         {
             //------------Setup for test--------------------------
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+            CustomContainer.Register<IServerController>(controller);
             var dataObject = new Mock<IDSFDataObject>();
             dataObject.Setup(d => d.RemoteInvokerID).Returns(remoteInvokerID);
             dataObject.Setup(d => d.IsRemoteWorkflow()).Returns(isRemoteWorkflow);

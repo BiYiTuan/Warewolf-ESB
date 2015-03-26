@@ -16,14 +16,16 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.Mail;
 using ActivityUnitTests;
 using Dev2.Activities;
+using Dev2.Common;
 using Dev2.Common.Interfaces;
 using Dev2.DataList.Contract;
 using Dev2.Enums;
-using Dev2.Runtime.Hosting;
 using Dev2.Runtime.ServiceModel.Data;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Unlimited.Applications.BusinessDesignStudio.Activities;
+using Warewolf.Server.AntiCorruptionLayer;
+using Warewolf.Server.Controllers;
 
 // ReSharper disable InconsistentNaming
 namespace Dev2.Tests.Activities.ActivityTests
@@ -341,7 +343,10 @@ namespace Dev2.Tests.Activities.ActivityTests
                 ResourceName = Guid.NewGuid().ToString(),
                 ResourceID = Guid.NewGuid()
             };
-            ResourceCatalog.Instance.SaveResource(Guid.Empty, testSource);
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+            CustomContainer.Register<IServerController>(controller);
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
+            resourceCatalog.SaveResource(Guid.Empty, testSource);
             EmailSource sendSource = null;
             MailMessage sendMessage = null;
             var emailSender = new Mock<IEmailSender>();
@@ -513,7 +518,10 @@ namespace Dev2.Tests.Activities.ActivityTests
             emailSourceForTesting.Host = "TestHost";
             emailSourceForTesting.UserName = "from.someone@amail.account";
             emailSourceForTesting.Password = "TestPassword";
-            ResourceCatalog.Instance.SaveResource(Guid.Empty, emailSourceForTesting);
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+            CustomContainer.Register<IServerController>(controller);
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
+            resourceCatalog.SaveResource(Guid.Empty, emailSourceForTesting);
             return emailSourceForTesting;
         }
     }

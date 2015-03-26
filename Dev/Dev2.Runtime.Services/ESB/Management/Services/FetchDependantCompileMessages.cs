@@ -23,7 +23,6 @@ using Dev2.Communication;
 using Dev2.Data.ServiceModel.Messages;
 using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
-using Dev2.Runtime.Hosting;
 using Dev2.Workspaces;
 using ServiceStack.Common.Extensions;
 
@@ -69,8 +68,8 @@ namespace Dev2.Runtime.ESB.Management.Services
             Guid.TryParse(workspaceId, out wGuid);
             Guid.TryParse(serviceId, out sGuid);
 
-
-            var thisService = ResourceCatalog.Instance.GetResource(wGuid, sGuid);
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
+            var thisService = resourceCatalog.GetResource(wGuid, sGuid);
             var msgs = new CompileMessageList();
             var dependants = new List<Guid>();
             if(thisService != null)
@@ -78,13 +77,13 @@ namespace Dev2.Runtime.ESB.Management.Services
                 var workspaceGuids = WorkspaceRepository.Instance.GetWorkspaceGuids();
                 workspaceGuids.ForEach(guid =>
                 {
-                    var union = dependants.Union(ResourceCatalog.Instance.GetDependants(guid, thisService.ResourceID));
+                    var union = dependants.Union(resourceCatalog.GetDependants(guid, thisService.ResourceID));
                     dependants = union.ToList();
                 });
                 
                 var enumerable = dependants.Select(a =>
                 {
-                    var resource = ResourceCatalog.Instance.GetResource(GlobalConstants.ServerWorkspaceID,a) ?? ResourceCatalog.Instance.GetResource(wGuid,a);
+                    var resource = resourceCatalog.GetResource(GlobalConstants.ServerWorkspaceID, a) ?? resourceCatalog.GetResource(wGuid, a);
                     return resource==null?"": resource.ResourcePath;
                 });
                 var deps = enumerable.Distinct().ToList();

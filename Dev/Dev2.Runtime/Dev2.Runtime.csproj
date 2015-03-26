@@ -243,6 +243,10 @@
       <Project>{019A92B9-9209-4930-BC96-381CB8B1C0EA}</Project>
       <Name>Dev2.Services.Execution</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Warewolf.Server.AntiCorruptionLayer\Warewolf.Server.AntiCorruptionLayer.csproj">
+      <Project>{EC18FE7A-CB08-4E4A-B8AE-8FAC1AACC24D}</Project>
+      <Name>Warewolf.Server.AntiCorruptionLayer</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

@@ -20,14 +20,11 @@ using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Common.Interfaces.Diagnostics.Debug;
 using Dev2.Communication;
-using Dev2.Data.Enums;
 using Dev2.Data.ServiceModel;
 using Dev2.DataList.Contract;
 using Dev2.DataList.Contract.Value_Objects;
 using Dev2.DynamicServices.Objects;
-using Dev2.Runtime.Hosting;
 using Dev2.Runtime.ServiceModel.Data;
-using Dev2.Workspaces;
 using ServiceStack.Common.Extensions;
 
 namespace Dev2.Runtime.ESB.Execution
@@ -47,7 +44,7 @@ namespace Dev2.Runtime.ESB.Execution
         /// <param name="workspace"></param>
         /// <param name="esbChannel"></param>
         public RemoteWorkflowExecutionContainer(ServiceAction sa, IDSFDataObject dataObj, IWorkspace workspace, IEsbChannel esbChannel)
-            : this(sa, dataObj, workspace, esbChannel, ResourceCatalog.Instance)
+            : this(sa, dataObj, workspace, esbChannel, CustomContainer.Get<IServerController>().GetResourceCatalog())
         {
         }
 

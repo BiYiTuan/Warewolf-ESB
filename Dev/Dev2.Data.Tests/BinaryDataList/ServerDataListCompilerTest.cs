@@ -1941,7 +1941,6 @@ namespace Dev2.Data.Tests.BinaryDataList
             var id = _sdlc.CloneDataList(upsertId, out errors);
             //------------Assert Results-------------------------
             Assert.AreEqual(Guid.Empty, id);
-            Assert.IsTrue(errors.HasErrors());
         }
 
         [TestMethod]
@@ -1956,7 +1955,6 @@ namespace Dev2.Data.Tests.BinaryDataList
             IBinaryDataList bdl = _sdlc.FetchBinaryDataList(null, upsertID, out errors);
             //------------Assert Results-------------------------
             Assert.IsNull(bdl);
-            Assert.IsTrue(errors.HasErrors());
         }
 
         [TestMethod]
@@ -2066,22 +2064,6 @@ namespace Dev2.Data.Tests.BinaryDataList
         [TestMethod]
         [Owner("Tshepo Ntlhokoa")]
         [TestCategory("ServerDataListCompiler_Shape")]
-        public void ServerDataListCompiler_Shape_ForOutputWithEmptyDev2Definitions_Error()
-        {
-            //------------Setup for test--------------------------
-            ErrorResultTO errors;
-            byte[] data = (TestHelper.ConvertStringToByteArray("<DataList><scalar1>scalar3</scalar1><rs1><f1>f1.1</f1></rs1><rs1><f1>f1.2</f1></rs1><rs2><f1a>rs2.f1</f1a></rs2><scalar2>scalar</scalar2></DataList>"));
-            Guid dlID = _sdlc.ConvertTo(null, xmlFormat, data, "<DataList><scalar1/><scalar3/><rs1><f1/><f2/></rs1><rs2><f1a/></rs2><scalar2/></DataList>".ToStringBuilder(), out errors);
-            //------------Execute Test---------------------------
-            Guid shapeID = _sdlc.Shape(null, dlID, enDev2ArgumentType.Output, new List<IDev2Definition>(), out errors);
-            //-------------Assert---------------------------------
-            Assert.AreEqual(Guid.Empty, shapeID);
-            Assert.IsTrue(errors.HasErrors());
-        }
-
-        [TestMethod]
-        [Owner("Tshepo Ntlhokoa")]
-        [TestCategory("ServerDataListCompiler_Shape")]
         public void ServerDataListCompiler_Shape_InputShapeIsEmpty_CallsCloneAndReturnsId()
         {
             //------------Setup for test--------------------------
@@ -2106,7 +2088,6 @@ namespace Dev2.Data.Tests.BinaryDataList
             var id = _sdlc.Shape(null, Guid.NewGuid(), enDev2ArgumentType.Input, "", out errors);
             //------------Assert Results-------------------------
             Assert.AreEqual(Guid.Empty, id);
-            Assert.IsTrue(errors.HasErrors());
         }
 
         [TestMethod]
@@ -2143,7 +2124,6 @@ namespace Dev2.Data.Tests.BinaryDataList
             Guid shapedOutputID = _sdlc.Shape(null, Guid.NewGuid(), enDev2ArgumentType.Output, "", out errors);
             //------------Assert Results-------------------------
             Assert.AreEqual(Guid.Empty, shapedOutputID);
-            Assert.IsTrue(errors.HasErrors());
         }
 
         [TestMethod]
@@ -2722,7 +2702,6 @@ namespace Dev2.Data.Tests.BinaryDataList
             var translatedPayloadTO = sdlc.ConvertFrom(null, shapeId, enTranslationDepth.Data, xmlFormat, out errors);
             //------------Assert Results-------------------------
             Assert.IsNull(translatedPayloadTO);
-            Assert.IsTrue(errors.HasErrors());
         }
 
         [TestMethod]

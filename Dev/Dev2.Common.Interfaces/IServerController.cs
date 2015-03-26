@@ -3,5 +3,6 @@
     public interface IServerController
     {
         IWorkflowApplicationFactory<T> GetWorkflowApplicationFactory<T>() where T:class ;
+        IResourceCatalog GetResourceCatalog();
     }
 }

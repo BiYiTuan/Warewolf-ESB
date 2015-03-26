@@ -184,7 +184,7 @@ namespace Dev2.Activities
                 IDev2DataListEvaluateIterator attachmentsItr = Dev2ValueObjectFactory.CreateEvaluateIterator(attachmentsEntry);
                 colItr.AddIterator(attachmentsItr);
 
-                var runtimeSource = ResourceCatalog.Instance.GetResource<EmailSource>(dataObject.WorkspaceID, SelectedEmailSource.ResourceID);
+                var runtimeSource = CustomContainer.Get<IServerController>().GetResourceCatalog().GetResource<EmailSource>(dataObject.WorkspaceID, SelectedEmailSource.ResourceID);
 
                 if(!allErrors.HasErrors())
                 {

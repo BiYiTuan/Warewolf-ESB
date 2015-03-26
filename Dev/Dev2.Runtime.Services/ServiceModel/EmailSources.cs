@@ -15,8 +15,8 @@ using System.Net.Mail;
 using System.Text;
 using System.Xml.Linq;
 using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Runtime.Diagnostics;
-using Dev2.Runtime.Hosting;
 using Dev2.Runtime.ServiceModel.Data;
 using Newtonsoft.Json;
 
@@ -30,7 +30,7 @@ namespace Dev2.Runtime.ServiceModel
         #region CTOR
 
         public EmailSources()
-            : this(ResourceCatalog.Instance)
+            : this(CustomContainer.Get<IServerController>().GetResourceCatalog())
         {
         }
 
@@ -53,7 +53,7 @@ namespace Dev2.Runtime.ServiceModel
             var result = new EmailSource();
             try
             {
-                var xmlStr = ResourceCatalog.Instance.GetResourceContents(workspaceId, Guid.Parse(resourceId)).ToString();
+                var xmlStr = _resourceCatalog.GetResourceContents(workspaceId, Guid.Parse(resourceId)).ToString();
                 if(!string.IsNullOrEmpty(xmlStr))
                 {
                     var xml = XElement.Parse(xmlStr);

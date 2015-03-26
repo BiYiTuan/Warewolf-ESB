@@ -27,6 +27,10 @@ using Moq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Dev2.Common;
+using Dev2.Common.Interfaces;
+using Warewolf.Server.AntiCorruptionLayer;
+using Warewolf.Server.Controllers;
 
 // ReSharper disable InconsistentNaming
 
@@ -858,12 +862,14 @@ namespace Dev2.Tests.Runtime.Hosting
         {
             //------------Setup for test--------------------------
             var catalogue = new Mock<IResourceCatalog>();
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController(catalogue.Object));
+            CustomContainer.Register<IServerController>(controller);
             var factory = new Mock<IExplorerItemFactory>();
             var dir = new Mock<IDirectory>();
             var res = new Mock<IResource>();
             var guid = Guid.NewGuid();
             res.Setup(a => a.ResourceName).Returns("mona");
-            res.Setup(a => a.ResourcePath).Returns("bob");
+            res.Setup(a => a.ResourcePath).Returns("bob\\");
             res.Setup(a => a.ResourceID).Returns(guid);
             res.Setup(a => a.ResourceType).Returns(ResourceType.EmailSource);
             dir.Setup(a => a.Exists(It.IsAny<string>())).Returns(true);
@@ -872,7 +878,7 @@ namespace Dev2.Tests.Runtime.Hosting
             catalogue.Setup(a => a.GetResourceList(It.IsAny<Guid>())).Returns(new List<IResource> { res.Object });
             catalogue.Setup(a => a.DeleteResource(It.IsAny<Guid>(), "mona", ResourceType.EmailSource.ToString(), null,true)).Returns(new ResourceCatalogResult { Status = ExecStatus.Success, Message = "" }).Verifiable();
             //------------Execute Test---------------------------
-            res.Setup(a => a.ResourcePath).Returns("bob");
+            res.Setup(a => a.ResourcePath).Returns("bob\\");
             var result = serverExplorerRepository.DeleteFolder("bob", true, Guid.NewGuid());
             //------------Assert Results-------------------------
             Assert.AreEqual(result.Message, "");
@@ -889,12 +895,14 @@ namespace Dev2.Tests.Runtime.Hosting
         {
             //------------Setup for test--------------------------
             var catalogue = new Mock<IResourceCatalog>();
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController(catalogue.Object));
+            CustomContainer.Register<IServerController>(controller);
             var factory = new Mock<IExplorerItemFactory>();
             var dir = new Mock<IDirectory>();
             var res = new Mock<IResource>();
             var guid = Guid.NewGuid();
             res.Setup(a => a.ResourceName).Returns("mona");
-            res.Setup(a => a.ResourcePath).Returns("bob");
+            res.Setup(a => a.ResourcePath).Returns("bob\\");
             res.Setup(a => a.ResourceID).Returns(guid);
             res.Setup(a => a.ResourceType).Returns(ResourceType.EmailSource);
             dir.Setup(a => a.Exists(It.IsAny<string>())).Returns(true);
@@ -904,7 +912,7 @@ namespace Dev2.Tests.Runtime.Hosting
             catalogue.Setup(a => a.DeleteResource(It.IsAny<Guid>(), "mona", ResourceType.EmailSource.ToString(), null, true)).Returns(new ResourceCatalogResult { Status = ExecStatus.Success, Message = "" }).Verifiable();
             dir.Setup(a => a.Delete(It.IsAny<string>(), true)).Throws(new FieldAccessException("moon"));
             //------------Execute Test---------------------------
-            res.Setup(a => a.ResourcePath).Returns("bob");
+            res.Setup(a => a.ResourcePath).Returns("bob\\");
             var result = serverExplorerRepository.DeleteFolder("bob", true, Guid.NewGuid());
             //------------Assert Results-------------------------
             Assert.AreEqual(result.Message, "moon");
@@ -921,12 +929,14 @@ namespace Dev2.Tests.Runtime.Hosting
         {
             //------------Setup for test--------------------------
             var catalogue = new Mock<IResourceCatalog>();
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController(catalogue.Object));
+            CustomContainer.Register<IServerController>(controller);
             var factory = new Mock<IExplorerItemFactory>();
             var dir = new Mock<IDirectory>();
             var res = new Mock<IResource>();
             var guid = Guid.NewGuid();
             res.Setup(a => a.ResourceName).Returns("mona");
-            res.Setup(a => a.ResourcePath).Returns("bob");
+            res.Setup(a => a.ResourcePath).Returns("bob\\");
             res.Setup(a => a.ResourceID).Returns(guid);
             res.Setup(a => a.ResourceType).Returns(ResourceType.EmailSource);
             dir.Setup(a => a.Exists(It.IsAny<string>())).Returns(true);
@@ -935,7 +945,7 @@ namespace Dev2.Tests.Runtime.Hosting
             catalogue.Setup(a => a.GetResourceList(It.IsAny<Guid>())).Returns(new List<IResource> { res.Object });
             catalogue.Setup(a => a.DeleteResource(It.IsAny<Guid>(), "mona", ResourceType.EmailSource.ToString(), null, true)).Returns(new ResourceCatalogResult { Status = ExecStatus.Fail, Message = "fanta" }).Verifiable();
             //------------Execute Test---------------------------
-            res.Setup(a => a.ResourcePath).Returns("bob");
+            res.Setup(a => a.ResourcePath).Returns("bob\\");
             var result = serverExplorerRepository.DeleteFolder("bob", true, Guid.NewGuid());
             //------------Assert Results-------------------------
             Assert.AreEqual(result.Message, "Failed to delete child items");

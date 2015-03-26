@@ -24,7 +24,6 @@ using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
 using Dev2.DynamicServices.Objects.Base;
 using Dev2.Runtime.Hosting;
-using Dev2.Workspaces;
 
 namespace Dev2.Runtime.ESB.Management.Services
 {
@@ -101,7 +100,7 @@ namespace Dev2.Runtime.ESB.Management.Services
 
             if(compiledResources != null)
             {
-                var saveResult = ResourceCatalog.Instance.SaveResource(workspaceId, resourceDefinition,null,"Save");
+                var saveResult = CustomContainer.Get<IServerController>().GetResourceCatalog().SaveResource(workspaceId, resourceDefinition, null, "Save");
                 res.SetMessage(saveResult.Message + " " + DateTime.Now);
             }
 

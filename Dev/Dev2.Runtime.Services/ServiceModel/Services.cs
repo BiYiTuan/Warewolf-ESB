@@ -13,10 +13,10 @@ using System;
 using System.Xml.Linq;
 using Dev2.Common;
 using Dev2.Common.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Communication;
 using Dev2.Runtime.Diagnostics;
-using Dev2.Runtime.Hosting;
 using Dev2.Runtime.Security;
 using Dev2.Runtime.ServiceModel.Data;
 using Dev2.Runtime.ServiceModel.Esb.Brokers;
@@ -40,7 +40,7 @@ namespace Dev2.Runtime.ServiceModel
         #region CTOR
 
         public Services()
-            : this(ResourceCatalog.Instance, ServerAuthorizationService.Instance)
+            : this(CustomContainer.Get<IServerController>().GetResourceCatalog(), ServerAuthorizationService.Instance)
         {
         }
 

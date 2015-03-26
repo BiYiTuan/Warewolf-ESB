@@ -16,13 +16,11 @@ using System.Text;
 using Dev2.Common;
 using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Core.DynamicServices;
+using Dev2.Common.Interfaces.Data;
 using Dev2.Communication;
 using Dev2.Data.ServiceModel;
 using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
-using Dev2.Runtime.Hosting;
-using Dev2.Runtime.ServiceModel.Data;
-using Dev2.Workspaces;
 
 namespace Dev2.Runtime.ESB.Management.Services
 {
@@ -58,12 +56,15 @@ namespace Dev2.Runtime.ESB.Management.Services
                 resourceId = tmp.ToString();
             }
 
-            IList<Resource> resources;
+            IList<IResource> resources;
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
             if(resourceId ==null || resourceId == "*" )
-                resources = ResourceCatalog.Instance.GetResourceList(theWorkspace.ID, resourceName, type, string.Empty);
+            {
+                resources = resourceCatalog.GetResourceList(theWorkspace.ID, resourceName, type, string.Empty);
+            }
             else
             {
-                resources = ResourceCatalog.Instance.GetResourceList(theWorkspace.ID, resourceId, type);
+                resources = resourceCatalog.GetResourceList(theWorkspace.ID, resourceId, type);
             }
             Dev2Logger.Log.Info("Find Resource. ResourceName: "+resourceName);
           

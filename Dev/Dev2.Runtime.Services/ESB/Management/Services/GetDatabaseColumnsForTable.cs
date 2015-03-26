@@ -21,9 +21,7 @@ using Dev2.Common.Interfaces.Core.DynamicServices;
 using Dev2.Communication;
 using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
-using Dev2.Runtime.Hosting;
 using Dev2.Runtime.ServiceModel.Data;
-using Dev2.Workspaces;
 
 namespace Dev2.Runtime.ESB.Management.Services
 {
@@ -92,7 +90,7 @@ namespace Dev2.Runtime.ESB.Management.Services
             try
             {
                 var dbSource = serializer.Deserialize<DbSource>(database);
-                var runtTimedbSource = ResourceCatalog.Instance.GetResource<DbSource>(theWorkspace.ID, dbSource.ResourceID);
+                var runtTimedbSource = CustomContainer.Get<IServerController>().GetResourceCatalog().GetResource<DbSource>(theWorkspace.ID, dbSource.ResourceID);
                 DataTable columnInfo;
                 using(var connection = new SqlConnection(runtTimedbSource.ConnectionString))
                 {
@@ -105,7 +103,7 @@ namespace Dev2.Runtime.ESB.Management.Services
                         schema = string.Empty;
                     }
 
-                    var sql = @"select top 1 * from " + schema.Trim(new[] { '"' }) + "." + tableName.Trim(new[] { '"' });
+                    var sql = @"select top 1 * from " + schema.Trim('"') + "." + tableName.Trim('"');
                     using(var sqlcmd = new SqlCommand(sql, connection))
                     {
                         // force it closed so we just get the proper schema ;)
@@ -134,7 +132,7 @@ namespace Dev2.Runtime.ESB.Management.Services
                             dbColumn.SqlDataType = sqlDataType;
                         }
 
-                        var columnLength = row["ColumnSize"] is int ? (int)row["ColumnSize"] : -1;
+                        var columnLength = row["ColumnSize"] as int? ?? -1;
                         dbColumn.MaxLength = columnLength;
                         dbColumns.Items.Add(dbColumn);
                     }

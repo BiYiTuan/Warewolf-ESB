@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Common.Interfaces.Explorer;
 using Dev2.Common.Interfaces.Hosting;
@@ -34,12 +35,13 @@ namespace Dev2.Runtime.Hosting
 
         static ServerExplorerRepository()
         {
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
             Instance = new ServerExplorerRepository
                 {
-                    ResourceCatalogue = ResourceCatalog.Instance,
-                    ExplorerItemFactory = new ExplorerItemFactory(ResourceCatalog.Instance, new DirectoryWrapper(), ServerAuthorizationService.Instance),
+                    ResourceCatalogue = resourceCatalog,
+                    ExplorerItemFactory = new ExplorerItemFactory(resourceCatalog, new DirectoryWrapper(), ServerAuthorizationService.Instance),
                     Directory = new DirectoryWrapper(),
-                    VersionRepository = new ServerVersionRepository(new VersionStrategy(), ResourceCatalog.Instance, new DirectoryWrapper(), EnvironmentVariables.GetWorkspacePath(GlobalConstants.ServerWorkspaceID), new FileWrapper())
+                    VersionRepository = new ServerVersionRepository(new VersionStrategy(), resourceCatalog, new DirectoryWrapper(), EnvironmentVariables.GetWorkspacePath(GlobalConstants.ServerWorkspaceID), new FileWrapper())
                     
                 };
         }
@@ -110,7 +112,7 @@ namespace Dev2.Runtime.Hosting
             {
                 return new ExplorerRepositoryResult(ExecStatus.Fail, "There is an item that exists with the same name and path");
             }
-            ResourceCatalogResult result = ResourceCatalogue.RenameResource(workSpaceId, itemToRename.ResourceId, itemToRename.DisplayName);
+            IResourceCatalogResult result = ResourceCatalogue.RenameResource(workSpaceId, itemToRename.ResourceId, itemToRename.DisplayName);
             return new ExplorerRepositoryResult(result.Status, result.Message);
         }
 
@@ -176,7 +178,7 @@ namespace Dev2.Runtime.Hosting
                         return DeleteFolder(itemToDelete.ResourcePath, true, workSpaceId);
                     }
                 default:
-                    ResourceCatalogResult result = ResourceCatalogue.DeleteResource(workSpaceId, itemToDelete.DisplayName, itemToDelete.ResourceType.ToString());
+                    IResourceCatalogResult result = ResourceCatalogue.DeleteResource(workSpaceId, itemToDelete.DisplayName, itemToDelete.ResourceType.ToString());
                     return new ExplorerRepositoryResult(result.Status, result.Message);
             }
         }
@@ -187,7 +189,8 @@ namespace Dev2.Runtime.Hosting
             {
                 return new ExplorerRepositoryResult(ExecStatus.Fail, "Requested folder does not exist on server. Folder: " + path);
             }
-            if(!deleteContents && ResourceCatalogue.GetResourceList(workSpaceId).Count(a => a.ResourcePath == path) > 0)
+            var resourceList = ResourceCatalogue.GetResourceList(workSpaceId);
+            if(!deleteContents && resourceList.Count(a => a.ResourcePath == path) > 0)
             {
                 return new ExplorerRepositoryResult(ExecStatus.Fail, "Requested folder contains existing valid resources " + path);
             }
@@ -198,8 +201,7 @@ namespace Dev2.Runtime.Hosting
             try
             {
                 path = path + "\\";
-                List<ResourceCatalogResult> deletedResources = ResourceCatalogue.GetResourceList(workSpaceId)
-                                                                                .Where(a => a.ResourcePath.StartsWith(path))
+                List<IResourceCatalogResult> deletedResources = resourceList.Where(a => a.ResourcePath.StartsWith(path))
                                                                                 .Select(a => ResourceCatalogue.DeleteResource(workSpaceId, a.ResourceName, a.ResourceType.ToString())).ToList();
                 if(deletedResources.Any(a => a.Status != ExecStatus.Success))
                 {
@@ -282,7 +284,7 @@ namespace Dev2.Runtime.Hosting
                 return new ExplorerRepositoryResult(ExecStatus.Fail, "There is an item that exists with the same name and path");
             }
             MoveVersions(itemToMove, newPath);
-            ResourceCatalogResult result = ResourceCatalogue.RenameCategory(workSpaceId,itemToMove.ResourcePath , newPath,new List<IResource>{ResourceCatalogue.GetResource(workSpaceId,itemToMove.ResourceId)});
+            IResourceCatalogResult result = ResourceCatalogue.RenameCategory(workSpaceId,itemToMove.ResourcePath , newPath,new List<IResource>{ResourceCatalogue.GetResource(workSpaceId,itemToMove.ResourceId)});
             _file.Delete(string.Format("{0}.xml", DirectoryStructureFromPath(itemToMove.ResourcePath)));
             
             return new ExplorerRepositoryResult(result.Status, result.Message);

@@ -26,7 +26,6 @@ using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
 using Dev2.Runtime.Hosting;
 using Dev2.Util;
-using Dev2.Workspaces;
 
 namespace Dev2.Runtime.ESB.Management.Services
 {
@@ -160,13 +159,13 @@ namespace Dev2.Runtime.ESB.Management.Services
         #endregion
         public IServerVersionRepository ServerVersionRepo
         {
-            get { return _serverExplorerRepository ?? new ServerVersionRepository(new VersionStrategy(), ResourceCatalog.Instance, new DirectoryWrapper(), EnvironmentVariables.GetWorkspacePath(GlobalConstants.ServerWorkspaceID), new FileWrapper()); }
+            get { return _serverExplorerRepository ?? new ServerVersionRepository(new VersionStrategy(), Resources, new DirectoryWrapper(), EnvironmentVariables.GetWorkspacePath(GlobalConstants.ServerWorkspaceID), new FileWrapper()); }
             set { _serverExplorerRepository = value; }
         }
 
         public IResourceCatalog Resources
         {
-            get { return _resourceCatalog ?? ResourceCatalog.Instance; }
+            get { return _resourceCatalog ?? CustomContainer.Get<IServerController>().GetResourceCatalog(); }
             set { _resourceCatalog = value; }
         }
     }

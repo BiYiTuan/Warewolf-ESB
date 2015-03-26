@@ -314,16 +314,18 @@ namespace Dev2.Server.Datalist
             {
                 // Ensure we have a non-null tmpDL
 
-                IBinaryDataList result = tmpDl.Clone(enTranslationDepth.Data, out errors, false);
-                if(result != null)
+                if (tmpDl != null)
                 {
-                    allErrors.MergeErrors(errors);
-                    TryPushDataList(result, out error);
-                    allErrors.AddError(error);
+                    IBinaryDataList result = tmpDl.Clone(enTranslationDepth.Data, out errors, false);
+                    if(result != null)
+                    {
+                        allErrors.MergeErrors(errors);
+                        TryPushDataList(result, out error);
+                        allErrors.AddError(error);
 
-                    res = result.UID;
+                        res = result.UID;
+                    }
                 }
-
             }
 
             errors = allErrors;
@@ -699,14 +701,17 @@ namespace Dev2.Server.Datalist
             }
             else
             {
-                IBinaryDataList toPush = tmp.Clone(enTranslationDepth.Data, out errors, onlySystemTags);
-                toPush.ParentUID = curDLID;
-                TryPushDataList(toPush, out error);
-                if(error != string.Empty)
+                if (tmp != null)
                 {
-                    errors.AddError(error);
+                    IBinaryDataList toPush = tmp.Clone(enTranslationDepth.Data, out errors, onlySystemTags);
+                    toPush.ParentUID = curDLID;
+                    TryPushDataList(toPush, out error);
+                    if(error != string.Empty)
+                    {
+                        errors.AddError(error);
+                    }
+                    result = toPush.UID;
                 }
-                result = toPush.UID;
             }
             return result;
         }
@@ -721,21 +726,24 @@ namespace Dev2.Server.Datalist
             }
             else
             {
-                Guid pID = tmp.ParentUID;
-                IBinaryDataList parentDl = TryFetchDataList(pID, out error);
-                if(error != string.Empty)
+                if (tmp != null)
                 {
-                    errors.AddError(error);
-                }
-                else
-                {
-                    tmp = parentDl.Merge(tmp, enDataListMergeTypes.Union, enTranslationDepth.Data_With_Blank_OverWrite, false, out errors);
-                    TryPushDataList(tmp, out error);
+                    Guid pID = tmp.ParentUID;
+                    IBinaryDataList parentDl = TryFetchDataList(pID, out error);
                     if(error != string.Empty)
                     {
                         errors.AddError(error);
                     }
-                    result = tmp.UID;
+                    else
+                    {
+                        tmp = parentDl.Merge(tmp, enDataListMergeTypes.Union, enTranslationDepth.Data_With_Blank_OverWrite, false, out errors);
+                        TryPushDataList(tmp, out error);
+                        if(error != string.Empty)
+                        {
+                            errors.AddError(error);
+                        }
+                        result = tmp.UID;
+                    }
                 }
             }
             return result;

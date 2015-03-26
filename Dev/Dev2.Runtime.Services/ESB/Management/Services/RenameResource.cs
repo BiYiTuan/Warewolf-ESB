@@ -69,10 +69,11 @@ namespace Dev2.Runtime.ESB.Management.Services
                 Guid id;
                 Guid.TryParse(resourceId, out id);
                 Dev2Logger.Log.Info(String.Format( "Rename Resource. ResourceId:{0} NewName:{1}",resourceId,newName));
-                var saveToWorkSpaceResult = ResourceCatalog.Instance.RenameResource(theWorkspace.ID, id, newName);
+                var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
+                var saveToWorkSpaceResult = resourceCatalog.RenameResource(theWorkspace.ID, id, newName);
                 if (saveToWorkSpaceResult.Status == ExecStatus.Success)
                 {
-                    var saveToLocalServerResult = ResourceCatalog.Instance.RenameResource(Guid.Empty, id, newName);
+                    var saveToLocalServerResult = resourceCatalog.RenameResource(Guid.Empty, id, newName);
                     if (saveToLocalServerResult.Status == ExecStatus.Success)
                     {
                         res.SetMessage(saveToLocalServerResult.Message);

@@ -20,10 +20,8 @@ using Dev2.Common.Interfaces.Data;
 using Dev2.Communication;
 using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
-using Dev2.Runtime.Hosting;
 using Dev2.Runtime.ServiceModel.Data;
 using Dev2.Util;
-using Dev2.Workspaces;
 
 namespace Dev2.Runtime.ESB.Management.Services
 {
@@ -59,9 +57,8 @@ namespace Dev2.Runtime.ESB.Management.Services
                 Dev2Logger.Log.Info("Fetch Resource definition. ResourceId:" + resourceId);
                 try
                 {
-                    var result = ResourceCatalog.Instance.GetResourceContents(theWorkspace.ID, resourceId);
+                    var result = CustomContainer.Get<IServerController>().GetResourceCatalog().GetResourceContents(theWorkspace.ID, resourceId);
                     var tempResource = new Resource(result.ToXElement());
-                    //var resource = ResourceCatalog.Instance.GetResource(theWorkspace.ID, resourceId);
                     var resource = tempResource;
 
                     if (resource.ResourceType == ResourceType.DbSource)

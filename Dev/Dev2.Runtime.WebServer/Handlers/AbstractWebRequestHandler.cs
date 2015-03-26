@@ -30,7 +30,6 @@ using Dev2.DataList.Contract;
 using Dev2.DataList.Contract.Binary_Objects;
 using Dev2.DynamicServices;
 using Dev2.Runtime.ESB.Control;
-using Dev2.Runtime.Hosting;
 using Dev2.Runtime.Security;
 using Dev2.Runtime.WebServer.Responses;
 using Dev2.Runtime.WebServer.TransferObjects;
@@ -136,7 +135,7 @@ namespace Dev2.Runtime.WebServer.Handlers
                 IResource resource = null;
                 if(!String.IsNullOrEmpty(dataObject.ServiceName))
                 {
-                    resource = ResourceCatalog.Instance.GetResource(dataObject.WorkspaceID, dataObject.ServiceName);
+                    resource = CustomContainer.Get<IServerController>().GetResourceCatalog().GetResource(dataObject.WorkspaceID, dataObject.ServiceName);
                     if(resource != null)
                     {
                         dataObject.ResourceID = resource.ResourceID;
@@ -271,8 +270,8 @@ namespace Dev2.Runtime.WebServer.Handlers
                         {
                             string tmp = executePayload.Substring(start, (end - start));
                             string result = CleanupHtml(tmp);
-                            const string DocType = @"<!DOCTYPE html PUBLIC ""-//W3C//DTD XHTML 1.0 Strict//EN"" ""http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"">";
-                            return new StringResponseWriter(String.Format("{0}\r\n{1}", DocType, result), ContentTypes.Html);
+                            const string docType = @"<!DOCTYPE html PUBLIC ""-//W3C//DTD XHTML 1.0 Strict//EN"" ""http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"">";
+                            return new StringResponseWriter(String.Format("{0}\r\n{1}", docType, result), ContentTypes.Html);
                         }
                     }
                 }

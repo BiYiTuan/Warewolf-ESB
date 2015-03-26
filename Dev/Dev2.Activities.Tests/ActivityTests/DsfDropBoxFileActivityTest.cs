@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using Dev2.Activities;
+using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Wrappers;
 using Dev2.Data.ServiceModel;
 using Dev2.Runtime.Hosting;
@@ -220,7 +222,11 @@ namespace Dev2.Tests.Activities.ActivityTests
         {
             var resourceID = Guid.NewGuid();
             var oauthSource = new OauthSource { ResourcePath = "OAuth Tests\\" + resourceID, ResourceName = resourceID.ToString(), ResourceID = resourceID };
-            ResourceCatalog.Instance.SaveResource(Guid.Empty, oauthSource);
+            var resourceCatalog = new ResourceCatalog();
+            var mockController = new Mock<IServerController>();
+            mockController.Setup(controller => controller.GetResourceCatalog()).Returns(resourceCatalog);
+            CustomContainer.Register(mockController.Object);
+            resourceCatalog.SaveResource(Guid.Empty, oauthSource);
             return oauthSource;
         }
     }

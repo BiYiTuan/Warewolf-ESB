@@ -19,8 +19,6 @@ using Dev2.Common.Interfaces.Hosting;
 using Dev2.Communication;
 using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
-using Dev2.Runtime.Hosting;
-using Dev2.Workspaces;
 
 namespace Dev2.Runtime.ESB.Management.Services
 {
@@ -54,7 +52,7 @@ namespace Dev2.Runtime.ESB.Management.Services
 
             Dev2Logger.Log.Info("Delete Resource Service. Resource:" + resourceId);
             // BUG 7850 - TWR - 2013.03.11 - ResourceCatalog refactor
-            var msg = ResourceCatalog.Instance.DeleteResource(theWorkspace.ID, resourceId, type);
+            var msg = CustomContainer.Get<IServerController>().GetResourceCatalog().DeleteResource(theWorkspace.ID, resourceId, type);
 
             var result = new ExecuteMessage { HasError = false };
             result.SetMessage(msg.Message);

@@ -20,7 +20,6 @@ using Dev2.Communication;
 using Dev2.DataList.Contract;
 using Dev2.DynamicServices;
 using Dev2.Runtime.ESB.Control;
-using Dev2.Runtime.Hosting;
 using Dev2.Runtime.WebServer.TransferObjects;
 
 namespace Dev2.Runtime.WebServer.Handlers
@@ -34,11 +33,11 @@ namespace Dev2.Runtime.WebServer.Handlers
             var serviceName = GetServiceName(ctx);
             var instanceId = GetInstanceID(ctx);
             var bookmark = GetBookmark(ctx);
-            var postDataListID = GetDataListID(ctx);
-            var workspaceID = GetWorkspaceID(ctx);
+            var postDataListId = GetDataListID(ctx);
+            var workspaceId = GetWorkspaceID(ctx);
             var formData = new WebRequestTO();
 
-            var xml = GetPostData(ctx, postDataListID);
+            var xml = GetPostData(ctx, postDataListId);
 
             if(!String.IsNullOrEmpty(xml))
             {
@@ -63,7 +62,7 @@ namespace Dev2.Runtime.WebServer.Handlers
                 {
                     Thread.CurrentPrincipal = ExecutingUser;
 
-                    var responseWriter = CreateForm(formData, serviceName, workspaceID, ctx.FetchHeaders(), PublicFormats);
+                    var responseWriter = CreateForm(formData, serviceName, workspaceId, ctx.FetchHeaders(), PublicFormats);
                     ctx.Send(responseWriter);
                 });
 
@@ -79,7 +78,7 @@ namespace Dev2.Runtime.WebServer.Handlers
             }
         }
 
-        public StringBuilder ProcessRequest(EsbExecuteRequest request, Guid workspaceID, Guid dataListID, string connectionId)
+        public StringBuilder ProcessRequest(EsbExecuteRequest request, Guid workspaceId, Guid dataListId, string connectionId)
         {
             var channel = new EsbServicesEndpoint();
             var xmlData = string.Empty;
@@ -95,9 +94,9 @@ namespace Dev2.Runtime.WebServer.Handlers
                 xmlData = "<DataList></DataList>";
             }
 
-            IDSFDataObject dataObject = new DsfDataObject(xmlData, dataListID);
+            IDSFDataObject dataObject = new DsfDataObject(xmlData, dataListId);
             dataObject.ServiceName = request.ServiceName;
-            var resource = ResourceCatalog.Instance.GetResource(workspaceID, request.ServiceName);
+            var resource = CustomContainer.Get<IServerController>().GetResourceCatalog().GetResource(workspaceId, request.ServiceName);
             if(resource != null)
             {
                 dataObject.ResourceID = resource.ResourceID;
@@ -107,7 +106,7 @@ namespace Dev2.Runtime.WebServer.Handlers
             // we need to assign new ThreadID to request coming from here, because it is a fixed connection and will not change ID on its own ;)
             if(!dataObject.Errors.HasErrors())
             {
-                var dlID = Guid.Empty;
+                var dlId = Guid.Empty;
                 ErrorResultTO errors;
 
                 if(ExecutingUser == null)
@@ -121,7 +120,7 @@ namespace Dev2.Runtime.WebServer.Handlers
                     var t = new Thread(() =>
                     {
                         Thread.CurrentPrincipal = ExecutingUser;
-                        dlID = channel.ExecuteRequest(dataObject, request, workspaceID, out errors);
+                        dlId = channel.ExecuteRequest(dataObject, request, workspaceId, out errors);
                     });
 
                     t.Start();
@@ -144,12 +143,12 @@ namespace Dev2.Runtime.WebServer.Handlers
                 // return the datalist ;)
                 if(dataObject.IsDebugMode())
                 {
-                    compiler.ForceDeleteDataListByID(dlID);
+                    compiler.ForceDeleteDataListByID(dlId);
                     return new StringBuilder("Completed Debug");
                 }
 
-                var result = compiler.ConvertFrom(dlID, DataListFormat.CreateFormat(GlobalConstants._XML_Without_SystemTags), enTranslationDepth.Data, out errors);
-                compiler.ForceDeleteDataListByID(dlID);
+                var result = compiler.ConvertFrom(dlId, DataListFormat.CreateFormat(GlobalConstants._XML_Without_SystemTags), enTranslationDepth.Data, out errors);
+                compiler.ForceDeleteDataListByID(dlId);
                 return result;
             }
 

@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dev2.Common;
 using Dev2.Common.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Communication;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Common.Interfaces.Diagnostics.Debug;
@@ -85,7 +86,7 @@ namespace Dev2.Runtime.WebServer.Hubs
 
         void ResourceSaved(IResource resource)
         {
-            var factory = new ExplorerItemFactory(ResourceCatalog.Instance, new DirectoryWrapper(), ServerAuthorizationService.Instance);
+            var factory = new ExplorerItemFactory(CustomContainer.Get<IServerController>().GetResourceCatalog(), new DirectoryWrapper(), ServerAuthorizationService.Instance);
             var resourceItem = factory.CreateResourceItem(resource);
             AddItemMessage(resourceItem);
         }
@@ -380,16 +381,15 @@ namespace Dev2.Runtime.WebServer.Hubs
             {
                 authorizationServiceBase.Dispose();
             }
-
-            if (ResourceCatalog.Instance.ResourceSaved == null)
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
+            if (resourceCatalog.ResourceSaved == null)
             {
-                ResourceCatalog.Instance.ResourceSaved = null;
+                resourceCatalog.ResourceSaved = null;
             }
-            if (ResourceCatalog.Instance.SendResourceMessages == null)
+            if (resourceCatalog.SendResourceMessages == null)
             {
-                ResourceCatalog.Instance.SendResourceMessages = null;
+                resourceCatalog.SendResourceMessages = null;
             }
-            ResourceCatalog.Instance.Dispose();
             return base.OnDisconnected();
         }
 
@@ -410,13 +410,14 @@ namespace Dev2.Runtime.WebServer.Hubs
             CompileMessageRepo.Instance.AllMessages.Subscribe(OnCompilerMessageReceived);
             ServerAuthorizationService.Instance.PermissionsModified += PermissionsHaveBeenModified;
             ServerExplorerRepository.Instance.MessageSubscription(this);
-            if(ResourceCatalog.Instance.ResourceSaved == null)
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
+            if (resourceCatalog.ResourceSaved == null)
             {
-                ResourceCatalog.Instance.ResourceSaved += ResourceSaved;
+                resourceCatalog.ResourceSaved += ResourceSaved;
             }
-            if(ResourceCatalog.Instance.SendResourceMessages == null)
+            if (resourceCatalog.SendResourceMessages == null)
             {
-                ResourceCatalog.Instance.SendResourceMessages += SendResourceMessages;
+                resourceCatalog.SendResourceMessages += SendResourceMessages;
             }
         }
 

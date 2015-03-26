@@ -43,10 +43,11 @@ using Dev2.Runtime.Hosting;
 using Dev2.Runtime.Security;
 using Dev2.Runtime.ServiceModel.Data;
 using Dev2.Tests.Runtime.XML;
-using Dev2.Workspaces;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Newtonsoft.Json;
+using Warewolf.Server.AntiCorruptionLayer;
+using Warewolf.Server.Controllers;
 
 // ReSharper disable InconsistentNaming
 namespace Dev2.Tests.Runtime.Hosting
@@ -82,19 +83,7 @@ namespace Dev2.Tests.Runtime.Hosting
                 }
             }
         }
-        #region Instance
 
-        [TestMethod]
-        public void InstanceExpectedIsSingleton()
-        {
-            var instance1 = ResourceCatalog.Instance;
-            var instance2 = ResourceCatalog.Instance;
-            Assert.IsNotNull(instance1);
-            Assert.IsNotNull(instance2);
-            Assert.AreSame(instance1, instance2);
-        }
-
-        #endregion
 
         #region This
 
@@ -469,7 +458,7 @@ namespace Dev2.Tests.Runtime.Hosting
             var catalog = new ResourceCatalog(null, new Mock<IServerVersionRepository>().Object);
             var _called = false;
             IResource _resourceInEvent = null;
-            catalog.ResourceSaved = resource1 =>
+            ((IResourceCatalog) catalog).ResourceSaved = resource1 =>
             {
                 _called = true;
                 _resourceInEvent = resource1;
@@ -790,7 +779,7 @@ namespace Dev2.Tests.Runtime.Hosting
             var rc = new ResourceCatalog(null, new Mock<IServerVersionRepository>().Object);
             rc.LoadWorkspace(workspaceID);
             //------------Execute Test---------------------------
-            var workflow = ResourceCatalog.Instance.GetResource<Workflow>(workspaceID, "Bugs\\" + resourceName);
+            var workflow = rc.GetResource<Workflow>(workspaceID, "Bugs\\" + resourceName);
             //------------Assert Results-------------------------
             Assert.IsNotNull(workflow);
             Assert.IsInstanceOfType(workflow, typeof(Workflow));
@@ -991,6 +980,7 @@ namespace Dev2.Tests.Runtime.Hosting
             SaveResources(workspaceID, out resources);
 
             var catalog = new ResourceCatalog(null, new Mock<IServerVersionRepository>().Object);
+            catalog.LoadWorkspace(workspaceID);
             foreach(var expected in resources)
             {
                 var xml = catalog.GetResourceContents(workspaceID, expected.ResourceID);
@@ -1205,7 +1195,7 @@ namespace Dev2.Tests.Runtime.Hosting
         #region GetPayload
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidDataContractException))]
+        [ExpectedException(typeof(Exception))]
         public void GetPayloadWithNullResourceNameAndTypeExpectedThrowsInvalidDataContractException()
         {
             var workspaceID = Guid.NewGuid();
@@ -1353,7 +1343,10 @@ namespace Dev2.Tests.Runtime.Hosting
             var targetFile = new FileInfo(targetResource.FilePath);
 
 
-            var result = new ResourceCatalog().CopyResource(sourceResource.ResourceID, sourceWorkspaceID, targetWorkspaceID);
+            var resourceCatalog = new ResourceCatalog();
+            resourceCatalog.LoadWorkspace(sourceWorkspaceID);
+            resourceCatalog.LoadWorkspace(targetWorkspaceID);
+            var result = resourceCatalog.CopyResource(sourceResource.ResourceID, sourceWorkspaceID, targetWorkspaceID);
             Assert.IsTrue(result);
             targetFile.Refresh();
             Assert.IsTrue(targetFile.Exists);
@@ -1469,7 +1462,7 @@ namespace Dev2.Tests.Runtime.Hosting
         #region DeleteResource
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidDataContractException))]
+        [ExpectedException(typeof(Exception))]
         public void DeleteResourceWithNullResourceNameExpectedThrowsInvalidDataContractException()
         {
             var workspaceID = Guid.NewGuid();
@@ -1478,7 +1471,7 @@ namespace Dev2.Tests.Runtime.Hosting
         }
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidDataContractException))]
+        [ExpectedException(typeof(Exception))]
         public void DeleteResourceWithNullTypeExpectedThrowsInvalidDataContractException()
         {
             var workspaceID = Guid.NewGuid();
@@ -2060,7 +2053,7 @@ namespace Dev2.Tests.Runtime.Hosting
             Assert.AreEqual(2, result.Count);
             Assert.IsNotNull(oldResource);
             //------------Execute Test---------------------------
-            ResourceCatalogResult resourceCatalogResult = rc.RenameResource(workspaceID, oldResource.ResourceID, newName);
+            IResourceCatalogResult resourceCatalogResult = rc.RenameResource(workspaceID, oldResource.ResourceID, newName);
             //------------Assert Results-------------------------
             Assert.AreEqual(ExecStatus.Success, resourceCatalogResult.Status);
             Assert.AreEqual("Renamed Resource 'ec636256-5f11-40ab-a044-10e731d87555' to '" + newName + "'", resourceCatalogResult.Message);
@@ -2111,7 +2104,7 @@ namespace Dev2.Tests.Runtime.Hosting
             Assert.AreEqual(1, result.Count);
             Assert.IsNotNull(oldResource);
             //------------Execute Test---------------------------
-            ResourceCatalogResult resourceCatalogResult = rc.RenameResource(workspaceID, Guid.Parse(resourceID), "TestName");
+            IResourceCatalogResult resourceCatalogResult = rc.RenameResource(workspaceID, Guid.Parse(resourceID), "TestName");
             //------------Assert Results-------------------------
             Assert.AreEqual(ExecStatus.Success, resourceCatalogResult.Status);
             Assert.AreEqual("Renamed Resource '" + resourceID + "' to 'TestName'", resourceCatalogResult.Message);
@@ -2154,7 +2147,7 @@ namespace Dev2.Tests.Runtime.Hosting
             Assert.AreEqual(1, result.Count);
             Assert.IsNotNull(oldResource);
             //------------Execute Test---------------------------
-            ResourceCatalogResult resourceCatalogResult = rc.RenameResource(workspaceID, oldResource.ResourceID, null);
+            IResourceCatalogResult resourceCatalogResult = rc.RenameResource(workspaceID, oldResource.ResourceID, null);
             //------------Assert Results-------------------------
             Assert.AreEqual(ExecStatus.Success, resourceCatalogResult.Status);
             Assert.AreEqual("<CompilerMessage>Updated Resource '50fef451-b41e-4bdf-92a1-4a41e254cde2' renamed to ''</CompilerMessage>", resourceCatalogResult.Message);
@@ -2187,7 +2180,7 @@ namespace Dev2.Tests.Runtime.Hosting
             Assert.AreEqual(1, result.Count);
             Assert.IsNotNull(oldResource);
             //------------Execute Test---------------------------
-            ResourceCatalogResult resourceCatalogResult = rc.RenameResource(workspaceID, oldResource.ResourceID, "");
+            IResourceCatalogResult resourceCatalogResult = rc.RenameResource(workspaceID, oldResource.ResourceID, "");
             //------------Assert Results-------------------------
             Assert.AreEqual(ExecStatus.Success, resourceCatalogResult.Status);
             Assert.AreEqual("<CompilerMessage>Updated Resource '50fef451-b41e-4bdf-92a1-4a41e254cde2' renamed to ''</CompilerMessage>", resourceCatalogResult.Message);
@@ -2222,7 +2215,7 @@ namespace Dev2.Tests.Runtime.Hosting
             Assert.AreEqual(2, result.Count);
             Assert.IsNotNull(oldResource);
             //------------Execute Test---------------------------
-            ResourceCatalogResult resourceCatalogResult = rc.RenameCategory(workspaceID, "Bugs", "TestCategory");
+            IResourceCatalogResult resourceCatalogResult = rc.RenameCategory(workspaceID, "Bugs", "TestCategory");
             //------------Assert Results-------------------------
             Assert.AreEqual(ExecStatus.Success, resourceCatalogResult.Status);
             Assert.AreEqual("<CompilerMessage>Updated Category from 'Bugs' to 'TestCategory'</CompilerMessage>", resourceCatalogResult.Message);
@@ -2250,7 +2243,7 @@ namespace Dev2.Tests.Runtime.Hosting
             rc.LoadWorkspace(workspaceID);
             rc.GetResources(workspaceID);
             //------------Execute Test---------------------------
-            ResourceCatalogResult resourceCatalogResult = rc.RenameCategory(workspaceID, "Bugs", "Testing");
+            IResourceCatalogResult resourceCatalogResult = rc.RenameCategory(workspaceID, "Bugs", "Testing");
             //------------Assert Results-------------------------
             Assert.AreEqual(ExecStatus.Fail, resourceCatalogResult.Status);
         }
@@ -2276,7 +2269,7 @@ namespace Dev2.Tests.Runtime.Hosting
             Assert.AreEqual(2, result.Count);
             Assert.IsNotNull(oldResource);
             //------------Execute Test---------------------------
-            ResourceCatalogResult resourceCatalogResult = rc.RenameCategory(workspaceID, "SomeNonExistentCategory", "TestCategory");
+            IResourceCatalogResult resourceCatalogResult = rc.RenameCategory(workspaceID, "SomeNonExistentCategory", "TestCategory");
             //------------Assert Results-------------------------
             Assert.AreEqual(ExecStatus.NoMatch, resourceCatalogResult.Status);
             string resourceContents = rc.GetResourceContents(workspaceID, oldResource.ResourceID).ToString();
@@ -2315,7 +2308,7 @@ namespace Dev2.Tests.Runtime.Hosting
             File.Copy(oldResource.FilePath, fileName, true);
             var fileStream = File.Open(fileName, FileMode.OpenOrCreate, FileAccess.Read, FileShare.Read);
             //------------Execute Test---------------------------
-            ResourceCatalogResult resourceCatalogResult = rc.RenameCategory(workspaceID, "Bugs", "TestCategory");
+            var resourceCatalogResult = rc.RenameCategory(workspaceID, "Bugs", "TestCategory");
             //------------Assert Results-------------------------
             fileStream.Close();
             File.Delete(fileName);
@@ -2343,7 +2336,7 @@ namespace Dev2.Tests.Runtime.Hosting
             Assert.AreEqual(2, result.Count);
             Assert.IsNotNull(oldResource);
             //------------Execute Test---------------------------
-            ResourceCatalogResult resourceCatalogResult = rc.RenameCategory(workspaceID, "Bugs", "TestCategory");
+            var resourceCatalogResult = rc.RenameCategory(workspaceID, "Bugs", "TestCategory");
             //------------Assert Results-------------------------
             Assert.AreEqual(ExecStatus.Success, resourceCatalogResult.Status);
             string resourceContents = rc.GetResourceContents(workspaceID, oldResource.ResourceID).ToString();
@@ -2375,7 +2368,7 @@ namespace Dev2.Tests.Runtime.Hosting
             Assert.AreEqual(2, result.Count);
             Assert.IsNotNull(oldResource);
             //------------Execute Test---------------------------
-            ResourceCatalogResult resourceCatalogResult = rc.RenameCategory(workspaceID, null, "TestCategory");
+            var resourceCatalogResult = rc.RenameCategory(workspaceID, null, "TestCategory");
             //------------Assert Results-------------------------
             Assert.AreEqual(ExecStatus.Success, resourceCatalogResult.Status);
             Assert.AreEqual("<CompilerMessage>Updated Category from 'Bugs' to 'TestCategory'</CompilerMessage>", resourceCatalogResult.Message);
@@ -2408,7 +2401,7 @@ namespace Dev2.Tests.Runtime.Hosting
             Assert.AreEqual(2, result.Count);
             Assert.IsNotNull(oldResource);
             //------------Execute Test---------------------------
-            ResourceCatalogResult resourceCatalogResult = rc.RenameCategory(workspaceID, oldResource.ResourcePath, null);
+            var resourceCatalogResult = rc.RenameCategory(workspaceID, oldResource.ResourcePath, null);
             //------------Assert Results-------------------------
             Assert.AreEqual(ExecStatus.Success, resourceCatalogResult.Status);
             Assert.AreEqual("<CompilerMessage>Updated Category from 'Bugs' to 'TestCategory'</CompilerMessage>", resourceCatalogResult.Message);
@@ -2441,7 +2434,7 @@ namespace Dev2.Tests.Runtime.Hosting
             Assert.AreEqual(2, result.Count);
             Assert.IsNotNull(oldResource);
             //------------Execute Test---------------------------
-            ResourceCatalogResult resourceCatalogResult = rc.RenameCategory(workspaceID, oldResource.ResourcePath, "");
+            var resourceCatalogResult = rc.RenameCategory(workspaceID, oldResource.ResourcePath, "");
             //------------Assert Results-------------------------
             Assert.AreEqual(ExecStatus.Success, resourceCatalogResult.Status);
             Assert.AreEqual("<CompilerMessage>Updated Category from 'Bugs' to 'TestCategory'</CompilerMessage>", resourceCatalogResult.Message);
@@ -2454,7 +2447,7 @@ namespace Dev2.Tests.Runtime.Hosting
 
         [TestMethod]
         [Owner("Huggs")]
-        [ExpectedException(typeof(InvalidDataContractException))]
+        [ExpectedException(typeof(Exception))]
         public void ResourceCatalog_DeleteResource_ResourceIDEmptyGuid_ExpectException()
         {
             //------------Setup for test--------------------------
@@ -2479,7 +2472,7 @@ namespace Dev2.Tests.Runtime.Hosting
 
         [TestMethod]
         [Owner("Huggs")]
-        [ExpectedException(typeof(InvalidDataContractException))]
+        [ExpectedException(typeof(Exception))]
         public void ResourceCatalog_DeleteResource_TypeEmptyString_ExpectException()
         {
             //------------Setup for test--------------------------
@@ -2504,7 +2497,7 @@ namespace Dev2.Tests.Runtime.Hosting
 
         [TestMethod]
         [Owner("Huggs")]
-        [ExpectedException(typeof(InvalidDataContractException))]
+        [ExpectedException(typeof(Exception))]
         public void ResourceCatalog_DeleteResource_TypeNull_ExpectException()
         {
             //------------Setup for test--------------------------
@@ -2961,7 +2954,7 @@ namespace Dev2.Tests.Runtime.Hosting
             //------------Assert Precondition-----------------
             Assert.AreEqual(2, result.Count);
             //------------Execute Test---------------------------
-            var dependants = ResourceCatalog.Instance.GetDependants(workspaceID, Guid.Parse("ec636256-5f11-40ab-a044-10e731d87555"));
+            var dependants = rc.GetDependants(workspaceID, Guid.Parse("ec636256-5f11-40ab-a044-10e731d87555"));
             //------------Assert Results-------------------------
             Assert.AreEqual(1, dependants.Count);
             Assert.AreEqual(Guid.Parse("1736ca6e-b870-467f-8d25-262972d8c3e8"), dependants[0]);
@@ -2995,7 +2988,7 @@ namespace Dev2.Tests.Runtime.Hosting
             element.Add(new XElement("b"));
             var s = xElement.ToString();
             var messages = new CompileMessageList();
-            rc.SendResourceMessages += (guid, tos) =>
+            ((IResourceCatalog) rc).SendResourceMessages += (guid, tos) =>
             {
                 messages.MessageList = tos;
             };
@@ -3067,7 +3060,7 @@ namespace Dev2.Tests.Runtime.Hosting
             element.Add(new XElement("b"));
             var s = xElement.ToString();
             var messages = new CompileMessageList();
-            rc.SendResourceMessages += (guid, tos) =>
+            ((IResourceCatalog) rc).SendResourceMessages += (guid, tos) =>
             {
                 messages.MessageList = tos;
             };
@@ -3119,7 +3112,7 @@ namespace Dev2.Tests.Runtime.Hosting
             //------------Assert Precondition-----------------
             Assert.AreEqual(2, result.Count);
             //------------Execute Test---------------------------
-            var dependants = ResourceCatalog.Instance.GetDependants(workspaceID, Guid.Parse("518edc28-e348-4a52-a900-f6aa75cfe92b"));
+            var dependants = rc.GetDependants(workspaceID, Guid.Parse("518edc28-e348-4a52-a900-f6aa75cfe92b"));
             //------------Assert Results-------------------------
             Assert.AreEqual(1, dependants.Count);
         }
@@ -3131,12 +3124,12 @@ namespace Dev2.Tests.Runtime.Hosting
             //------------Setup for test--------------------------
             var workspaceID = Guid.NewGuid();
             var rc = new ResourceCatalog(null, new Mock<IServerVersionRepository>().Object);
-            var result = rc.LoadWorkspaceViaBuilder("xx", new string[0]);
+            var result = rc.LoadWorkspaceViaBuilder("xx");
             //const string resourceName = "resource";
             //------------Assert Precondition-----------------
             Assert.AreEqual(0, result.Count);
             //------------Execute Test---------------------------
-            var dependants = ResourceCatalog.Instance.GetDependants(workspaceID, Guid.Empty);
+            var dependants = rc.GetDependants(workspaceID, Guid.Empty);
             //------------Assert Results-------------------------
             Assert.AreEqual(0, dependants.Count);
         }
@@ -3158,7 +3151,7 @@ namespace Dev2.Tests.Runtime.Hosting
             //------------Assert Precondition-----------------
             Assert.AreEqual(1, result.Count);
             //------------Execute Test---------------------------
-            var dependants = ResourceCatalog.Instance.GetDependants(workspaceID, Guid.Parse("ec636256-5f11-40ab-a044-10e731d87555"));
+            var dependants = rc.GetDependants(workspaceID, Guid.Parse("ec636256-5f11-40ab-a044-10e731d87555"));
             //------------Assert Results-------------------------
             Assert.AreEqual(0, dependants.Count);
         }
@@ -3184,7 +3177,7 @@ namespace Dev2.Tests.Runtime.Hosting
             //------------Assert Precondition-----------------
             Assert.AreEqual(2, result.Count);
             //------------Execute Test---------------------------
-            var dependants = ResourceCatalog.Instance.GetDependentsAsResourceForTrees(workspaceID, Guid.Parse("ec636256-5f11-40ab-a044-10e731d87555"));
+            var dependants = rc.GetDependentsAsResourceForTrees(workspaceID, Guid.Parse("ec636256-5f11-40ab-a044-10e731d87555"));
             //------------Assert Results-------------------------
             Assert.AreEqual(1, dependants.Count);
             Assert.AreEqual("Bug6619", dependants[0].ResourceName);
@@ -3213,7 +3206,7 @@ namespace Dev2.Tests.Runtime.Hosting
             //------------Assert Precondition-----------------
             Assert.AreEqual(2, result.Count);
             //------------Execute Test---------------------------
-            var dependants = ResourceCatalog.Instance.GetDependentsAsResourceForTrees(workspaceID, Guid.Parse("518edc28-e348-4a52-a900-f6aa75cfe92b"));
+            var dependants = rc.GetDependentsAsResourceForTrees(workspaceID, Guid.Parse("518edc28-e348-4a52-a900-f6aa75cfe92b"));
             //------------Assert Results-------------------------
             Assert.AreEqual(1, dependants.Count);
         }
@@ -3225,12 +3218,12 @@ namespace Dev2.Tests.Runtime.Hosting
             //------------Setup for test--------------------------
             var workspaceID = Guid.NewGuid();
             var rc = new ResourceCatalog(null, new Mock<IServerVersionRepository>().Object);
-            var result = rc.LoadWorkspaceViaBuilder("xx", new string[0]);
+            var result = rc.LoadWorkspaceViaBuilder("xx");
             //  const string resourceName = "resource";
             //------------Assert Precondition-----------------
             Assert.AreEqual(0, result.Count);
             //------------Execute Test---------------------------
-            var dependants = ResourceCatalog.Instance.GetDependentsAsResourceForTrees(workspaceID, Guid.NewGuid());
+            var dependants = rc.GetDependentsAsResourceForTrees(workspaceID, Guid.NewGuid());
             //------------Assert Results-------------------------
             Assert.AreEqual(0, dependants.Count);
         }
@@ -3257,7 +3250,7 @@ namespace Dev2.Tests.Runtime.Hosting
             //------------Assert Precondition-----------------
             Assert.AreEqual(1, result.Count);
             //------------Execute Test---------------------------
-            var dependants = ResourceCatalog.Instance.GetDependentsAsResourceForTrees(workspaceID, Guid.Parse("7b8c9b6e-16f4-4771-8605-655bbfab7543"));
+            var dependants = rc.GetDependentsAsResourceForTrees(workspaceID, Guid.Parse("7b8c9b6e-16f4-4771-8605-655bbfab7543"));
             //------------Assert Results-------------------------
             Assert.AreEqual(1, dependants.Count);
         }
@@ -3284,7 +3277,7 @@ namespace Dev2.Tests.Runtime.Hosting
         #region VerifyObjectGraph
 
         static void VerifyObjectGraph<TGraph>(ICollection<IResource> expectedResources, ICollection<TGraph> actualGraphs)
-            where TGraph : DynamicServiceObjectBase
+            where TGraph : IDynamicServiceObject
         {
             Assert.AreEqual(expectedResources.Count, actualGraphs.Count);
 
@@ -3315,13 +3308,15 @@ namespace Dev2.Tests.Runtime.Hosting
             const string newResourceName = "New-Name-With-Dashes";
             const string oldResourceName = "Old Resource Name";
 
-            var getCatalog = ResourceCatalog.Instance;
+            var getCatalog = new ResourceCatalog();
             var resource = new Resource
             {
                 ResourceName = oldResourceName,
                 ResourceID = resourceID,
             };
             getCatalog.SaveResource(workspace, resource);
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController(getCatalog));
+            CustomContainer.Register<IServerController>(controller);
             var renameResourceService = new RenameResource();
             var mockedWorkspace = new Mock<IWorkspace>();
             mockedWorkspace.Setup(ws => ws.ID).Returns(workspace);
@@ -3385,7 +3380,7 @@ namespace Dev2.Tests.Runtime.Hosting
             var rc = new ResourceCatalog(null, new Mock<IServerVersionRepository>().Object);
             rc.LoadWorkspaceViaBuilder(workspacePath, "Services");
             //------------Execute Test---------------------------
-            var workflow = ResourceCatalog.Instance.GetResourceList(workspaceID, resourceName, null, "*");
+            var workflow = rc.GetResourceList(workspaceID, resourceName, null, "*");
             //------------Assert Results-------------------------
             Assert.IsNotNull(workflow);
             Assert.AreEqual(1, workflow.Count);
@@ -3409,7 +3404,7 @@ namespace Dev2.Tests.Runtime.Hosting
             var rc = new ResourceCatalog(null, new Mock<IServerVersionRepository>().Object);
             rc.LoadWorkspaceViaBuilder(workspacePath, "Services");
             //------------Execute Test---------------------------
-            var workflow = ResourceCatalog.Instance.GetResourceList(workspaceID, "Bob", "*", "*");
+            var workflow = rc.GetResourceList(workspaceID, "Bob", "*", "*");
             //------------Assert Results-------------------------
             Assert.AreEqual(0, workflow.Count);
 
@@ -3418,7 +3413,7 @@ namespace Dev2.Tests.Runtime.Hosting
         [TestMethod]
         [Owner("Travis Frisinger")]
         [TestCategory("ResourceCatalog_GetResourceList")]
-        [ExpectedException(typeof(InvalidDataContractException))]
+        [ExpectedException(typeof(Exception))]
         public void ResourceCatalog_GetResourceList_WhenNameAndResourceNameAndTypeNull_ExpectException()
         {
             //------------Setup for test--------------------------
@@ -3432,7 +3427,7 @@ namespace Dev2.Tests.Runtime.Hosting
             var rc = new ResourceCatalog(null, new Mock<IServerVersionRepository>().Object);
             rc.LoadWorkspaceViaBuilder(workspacePath, "Services");
             //------------Execute Test---------------------------
-            ResourceCatalog.Instance.GetResourceList(workspaceID, null, null, "*");
+            rc.GetResourceList(workspaceID, null, null, "*");
 
         }
 
@@ -3458,7 +3453,7 @@ namespace Dev2.Tests.Runtime.Hosting
             var searchString = resources.Aggregate(string.Empty, (current, res) => current + (res.ResourceID + ","));
 
             //------------Execute Test---------------------------
-            var workflow = ResourceCatalog.Instance.GetResourceList(workspaceID, searchString, "*");
+            var workflow = rc.GetResourceList(workspaceID, searchString, "*");
             //------------Assert Results-------------------------
             Assert.IsNotNull(workflow);
             Assert.AreEqual(2, workflow.Count);
@@ -3490,7 +3485,7 @@ namespace Dev2.Tests.Runtime.Hosting
             var searchString = resources.Aggregate(string.Empty, (current, res) => current + (Guid.NewGuid() + ","));
 
             //------------Execute Test---------------------------
-            var workflow = ResourceCatalog.Instance.GetResourceList(workspaceID, searchString, "*");
+            var workflow = rc.GetResourceList(workspaceID, searchString, "*");
             //------------Assert Results-------------------------
             Assert.AreEqual(0, workflow.Count);
 
@@ -3518,7 +3513,7 @@ namespace Dev2.Tests.Runtime.Hosting
             var searchString = resources.Aggregate(string.Empty, (current, res) => current + (Guid.NewGuid() + ","));
 
             //------------Execute Test---------------------------
-            ResourceCatalog.Instance.GetResourceList(workspaceID, searchString, null);
+            rc.GetResourceList(workspaceID, searchString, null);
 
         }
 
@@ -3541,7 +3536,7 @@ namespace Dev2.Tests.Runtime.Hosting
             rc.LoadWorkspaceViaBuilder(workspacePath, "Workflows");
 
             //------------Execute Test---------------------------
-            var workflow = ResourceCatalog.Instance.GetResourceList(workspaceID, null, "*");
+            var workflow = rc.GetResourceList(workspaceID, null, "*");
             //------------Assert Results-------------------------
             Assert.AreEqual(0, workflow.Count);
 

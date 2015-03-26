@@ -24,6 +24,7 @@ namespace Dev2.Common.Interfaces.Core.DynamicServices
         enDynamicServiceObjectType ObjectType { get; set; }
         StringBuilder ResourceDefinition { get; set; }
         int VersionNo { get; set; }
+        StringBuilder DataListSpecification { get; set; }
         bool Compile();
         void WriteCompileError(string traceMsg);
         void WriteCompileWarning(string traceMsg);

@@ -23,6 +23,7 @@ using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Common.Interfaces.Diagnostics.Debug;
 using Dev2.Communication;
+using Dev2.Data.ServiceModel;
 using Dev2.DataList.Contract;
 using Dev2.Diagnostics.Debug;
 using Dev2.Runtime.ESB;
@@ -36,6 +37,8 @@ using Dev2.Workspaces;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Newtonsoft.Json;
+using Warewolf.Server.AntiCorruptionLayer;
+using Warewolf.Server.Controllers;
 using IWorkspace = Dev2.Common.Interfaces.IWorkspace;
 
 // ReSharper disable InconsistentNaming
@@ -95,7 +98,11 @@ namespace Dev2.Tests.Runtime
                 new[] { _sourceID, Guid.Parse(ServerConnection1ID), Guid.Parse(ServerConnection2ID) },
                 new[] { _serviceID, _unsignedServiceID });
 
-            ResourceCatalog.Instance.LoadWorkspace(_workspaceID);
+            var resourceCatalog = new ResourceCatalog();
+            var mockResourceCatalogController = new Mock<IResourceCatalogController>();
+            mockResourceCatalogController.Setup(controller => controller.GetResourceCatalog()).Returns(resourceCatalog);
+            CustomContainer.Register(mockResourceCatalogController.Object);
+            resourceCatalog.LoadWorkspace(_workspaceID);
         }
 
         #endregion
@@ -228,6 +235,9 @@ namespace Dev2.Tests.Runtime
 
         void FindResourcesByID(int expectedCount, params string[] guids)
         {
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+            CustomContainer.Register<IServerController>(controller);
+            CustomContainer.Get<IServerController>().GetResourceCatalog().LoadWorkspace(_workspaceID);
             var workspace = new Mock<IWorkspace>();
             workspace.Setup(m => m.ID).Returns(_workspaceID);
 
@@ -238,7 +248,7 @@ namespace Dev2.Tests.Runtime
 
             var resources = findResourcesEndPoint.Execute(data, workspace.Object);
 
-            var resourcesObj = JsonConvert.DeserializeObject<List<Resource>>(resources.ToString());
+            var resourcesObj = new Dev2JsonSerializer().Deserialize<List<SerializableResource>>(resources.ToString());
 
             var actualCount = 0;
             // ReSharper disable LoopCanBeConvertedToQuery
@@ -266,6 +276,9 @@ namespace Dev2.Tests.Runtime
         {
 
             //------------Setup for test--------------------------
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+            CustomContainer.Register<IServerController>(controller);
+            CustomContainer.Get<IServerController>().GetResourceCatalog().LoadWorkspace(_workspaceID);
             var workspace = new Mock<IWorkspace>();
             workspace.Setup(m => m.ID).Returns(_workspaceID);
 
@@ -293,7 +306,8 @@ namespace Dev2.Tests.Runtime
         {
 
             //------------Setup for test--------------------------
-
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+            CustomContainer.Register<IServerController>(controller);
             var workspace = new Mock<IWorkspace>();
             workspace.Setup(m => m.ID).Returns(_workspaceID);
 
@@ -303,8 +317,9 @@ namespace Dev2.Tests.Runtime
             var resourcePath = sourceXML.ElementSafe("Category");
 
             var serverIDAttribute = sourceXML.Attribute("ServerID");
-            ResourceCatalog.Instance.SaveResource(_workspaceID, sourceXML.ToStringBuilder());
-            var resource = ResourceCatalog.Instance.GetResource(_workspaceID, resourcePath + "\\" + SourceName);
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
+            resourceCatalog.SaveResource(_workspaceID, sourceXML.ToStringBuilder());
+            var resource = resourceCatalog.GetResource(_workspaceID, resourcePath + "\\" + SourceName);
             IEsbManagementEndpoint endPoint = new FetchResourceDefintition();
 
             Dictionary<string, StringBuilder> data = new Dictionary<string, StringBuilder>();
@@ -330,6 +345,8 @@ namespace Dev2.Tests.Runtime
         {
 
             //------------Setup for test--------------------------
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+            CustomContainer.Register<IServerController>(controller);
             const string serviceName = "Bug9304";
 
             var workspace = new Mock<IWorkspace>();
@@ -339,8 +356,9 @@ namespace Dev2.Tests.Runtime
             var categoryElement = xml.Element("Category");
             Assert.IsNotNull(categoryElement);
             var resourcePath = categoryElement.Value;
-            ResourceCatalog.Instance.SaveResource(_workspaceID, xml.ToStringBuilder());
-            var resource = ResourceCatalog.Instance.GetResource(_workspaceID, resourcePath + "\\" + serviceName);
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
+            resourceCatalog.SaveResource(_workspaceID, xml.ToStringBuilder());
+            var resource = resourceCatalog.GetResource(_workspaceID, resourcePath + "\\" + serviceName);
             IEsbManagementEndpoint endPoint = new FetchResourceDefintition();
 
             Dictionary<string, StringBuilder> data = new Dictionary<string, StringBuilder>();

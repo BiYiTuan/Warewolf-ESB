@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Dev2.Common.Interfaces;
 
 // ReSharper disable InconsistentNaming
 namespace Dev2.Tests.Runtime.Hosting

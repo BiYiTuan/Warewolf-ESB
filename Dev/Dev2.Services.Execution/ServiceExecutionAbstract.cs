@@ -21,7 +21,6 @@ using Dev2.Data.Util;
 using Dev2.DataList.Contract;
 using Dev2.DataList.Contract.Binary_Objects;
 using Dev2.DataList.Contract.Value_Objects;
-using Dev2.Runtime.Hosting;
 using Dev2.Runtime.ServiceModel.Data;
 using Unlimited.Framework.Converters.Graph;
 
@@ -56,7 +55,7 @@ namespace Dev2.Services.Execution
             RequiresFormatting = requiresFormatting;
             if (DataObj.ResourceID != Guid.Empty || !string.IsNullOrEmpty(dataObj.ServiceName))
             {
-                CreateService(ResourceCatalog.Instance);
+                CreateService(CustomContainer.Get<IServerController>().GetResourceCatalog());
             }
         }
 
@@ -80,13 +79,13 @@ namespace Dev2.Services.Execution
 
         public abstract void AfterExecution(ErrorResultTO errors);
 
-        protected void CreateService(ResourceCatalog catalog)
+        protected void CreateService(IResourceCatalog catalog)
         {
             if (!GetService(catalog)) return;
             GetSource(catalog);
         }
 
-        private void GetSource(ResourceCatalog catalog)
+        private void GetSource(IResourceCatalog catalog)
         {
             Source = catalog.GetResource<TSource>(GlobalConstants.ServerWorkspaceID, Service.Source.ResourceID) ??
                      catalog.GetResource<TSource>(GlobalConstants.ServerWorkspaceID, Service.Source.ResourceName);
@@ -97,7 +96,7 @@ namespace Dev2.Services.Execution
             }
         }
 
-        protected virtual bool GetService(ResourceCatalog catalog)
+        protected virtual bool GetService(IResourceCatalog catalog)
         {
             Service = catalog.GetResource<TService>(GlobalConstants.ServerWorkspaceID, DataObj.ResourceID) ??
                       catalog.GetResource<TService>(GlobalConstants.ServerWorkspaceID, DataObj.ServiceName);
@@ -327,16 +326,16 @@ namespace Dev2.Services.Execution
                     errors.MergeErrors(invokeErrors);
 
                     // Push formatted data into a datalist using the shape from the service action outputs
-                    Guid shapeDataListID = compiler.ConvertTo(DataListFormat.CreateFormat(GlobalConstants._XML),
+                    Guid shapeDataListId = compiler.ConvertTo(DataListFormat.CreateFormat(GlobalConstants._XML),
                         formattedPayload.ToStringBuilder(), dlShape, out invokeErrors);
                     errors.MergeErrors(invokeErrors);
 
                     // This merge op is killing the alias data....
                     // We need to account for alias ops too ;)
-                    compiler.SetParentID(shapeDataListID, DataObj.DataListID);
+                    compiler.SetParentID(shapeDataListId, DataObj.DataListID);
 
                     compiler.PopulateDataList(DataListFormat.CreateFormat(GlobalConstants._XML_Without_SystemTags),
-                        InstanceOutputDefintions, InstanceOutputDefintions, shapeDataListID, out invokeErrors);
+                        InstanceOutputDefintions, InstanceOutputDefintions, shapeDataListId, out invokeErrors);
                     errors.MergeErrors(invokeErrors);
                 }
                 catch (Exception)

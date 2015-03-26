@@ -15,6 +15,7 @@ using System.Net;
 using System.Text;
 using System.Xml.Linq;
 using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Data.ServiceModel;
 using Dev2.DataList.Contract;
 using Dev2.Runtime.Diagnostics;
@@ -36,7 +37,7 @@ namespace Dev2.Runtime.ServiceModel
         #region CTOR
 
         public WebSources()
-            : this(ResourceCatalog.Instance)
+            : this(CustomContainer.Get<IServerController>().GetResourceCatalog())
         {
         }
 
@@ -59,7 +60,7 @@ namespace Dev2.Runtime.ServiceModel
             var result = new WebSource();
             try
             {
-                var xmlStr = ResourceCatalog.Instance.GetResourceContents(workspaceId, Guid.Parse(resourceId)).ToString();
+                var xmlStr = _resourceCatalog.GetResourceContents(workspaceId, Guid.Parse(resourceId)).ToString();
                 if(!string.IsNullOrEmpty(xmlStr))
                 {
                     var xml = XElement.Parse(xmlStr);

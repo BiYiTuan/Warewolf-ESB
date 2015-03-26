@@ -36,6 +36,8 @@ using Microsoft.VisualBasic.Activities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Unlimited.Applications.BusinessDesignStudio.Activities;
+using Warewolf.Server.AntiCorruptionLayer;
+using Warewolf.Server.Controllers;
 
 // ReSharper disable CheckNamespace
 namespace ActivityUnitTests
@@ -139,9 +141,13 @@ namespace ActivityUnitTests
 
         public dynamic ExecuteProcess(IDSFDataObject dataObject = null, bool isDebug = false, IEsbChannel channel = null, bool isRemoteInvoke = false, bool throwException = true, bool isDebugMode = false, Guid currentEnvironmentId = default(Guid), bool overrideRemote = false)
         {
-
-            
-                var svc = new ServiceAction { Name = "TestAction", ServiceName = "UnitTestService" };
+            var serverController = CustomContainer.Get<IServerController>();
+            if (serverController==null || serverController.GetResourceCatalog()==null || serverController.GetWorkflowApplicationFactory<Activity>()==null)
+            {
+                var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController()); 
+                CustomContainer.Register<IServerController>(controller);
+            }
+            var svc = new ServiceAction { Name = "TestAction", ServiceName = "UnitTestService" };
                 svc.SetActivity(FlowchartProcess);
                 Mock<IEsbChannel> mockChannel = new Mock<IEsbChannel>();
 

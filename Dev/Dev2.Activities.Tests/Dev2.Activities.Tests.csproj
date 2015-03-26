@@ -275,6 +275,14 @@
       <Project>{1990550D-EA6F-4DAC-9B5E-8571E86923ED}</Project>
       <Name>Dev2.Util</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Warewolf.Server.AntiCorruptionLayer\Warewolf.Server.AntiCorruptionLayer.csproj">
+      <Project>{EC18FE7A-CB08-4E4A-B8AE-8FAC1AACC24D}</Project>
+      <Name>Warewolf.Server.AntiCorruptionLayer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Warewolf.Server.Controllers\Warewolf.Server.Controllers.csproj">
+      <Project>{BEBE01BC-D343-4D60-9175-1AD5134BBEB3}</Project>
+      <Name>Warewolf.Server.Controllers</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

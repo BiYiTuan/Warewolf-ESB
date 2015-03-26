@@ -22,9 +22,7 @@ using Dev2.Common.Interfaces.Infrastructure.SharedModels;
 using Dev2.Communication;
 using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
-using Dev2.Runtime.Hosting;
 using Dev2.Runtime.ServiceModel.Data;
-using Dev2.Workspaces;
 
 namespace Dev2.Runtime.ESB.Management.Services
 {
@@ -79,7 +77,7 @@ namespace Dev2.Runtime.ESB.Management.Services
 
                 if(dbSource.ResourceID != Guid.Empty)
                 {
-                    runtimeDbSource = ResourceCatalog.Instance.GetResource<DbSource>(theWorkspace.ID, dbSource.ResourceID);
+                    runtimeDbSource = CustomContainer.Get<IServerController>().GetResourceCatalog().GetResource<DbSource>(theWorkspace.ID, dbSource.ResourceID);
                 }
             }
             catch(Exception e)
@@ -129,19 +127,19 @@ namespace Dev2.Runtime.ESB.Management.Services
                 if(tables.Items.Count == 0)
                 {
                     tables.HasErrors = true;
-                    const string ErrorFormat = "The login provided in the database source uses {0} and most probably does not have permissions to perform the following query: "
+                    const string errorFormat = "The login provided in the database source uses {0} and most probably does not have permissions to perform the following query: "
                                           + "\r\n\r\n{1}SELECT * FROM INFORMATION_SCHEMA.TABLES;{2}";
 
                     if(dbSource.AuthenticationType == AuthenticationType.User)
                     {
-                        tables.Errors = string.Format(ErrorFormat,
+                        tables.Errors = string.Format(errorFormat,
                             "SQL Authentication (User: '" + dbSource.UserID + "')",
                             "EXECUTE AS USER = '" + dbSource.UserID + "';\r\n",
                             "\r\nREVERT;");
                     }
                     else
                     {
-                        tables.Errors = string.Format(ErrorFormat, "Windows Authentication", "", "");
+                        tables.Errors = string.Format(errorFormat, "Windows Authentication", "", "");
                     }
                 }
                 return serializer.SerializeToBuilder(tables);

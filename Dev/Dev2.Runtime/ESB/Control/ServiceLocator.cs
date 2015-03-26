@@ -12,6 +12,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.DynamicServices;
 using Dev2.Runtime.Hosting;
 
@@ -39,7 +41,7 @@ namespace Dev2.Runtime.ESB.Control
                 throw new InvalidDataException("Empty or null service passed in");
             }
 
-            var services = ResourceCatalog.Instance.GetDynamicObjects<DynamicService>(workspaceID, serviceName);
+            var services = CustomContainer.Get<IServerController>().GetResourceCatalog().GetDynamicObjects<DynamicService>(workspaceID, serviceName);
             return services.FirstOrDefault();
         }
 
@@ -58,7 +60,7 @@ namespace Dev2.Runtime.ESB.Control
                 throw new InvalidDataException("Empty or null service passed in");
             }
 
-            var services = ResourceCatalog.Instance.GetDynamicObjects<DynamicService>(workspaceID, serviceID);
+            var services = CustomContainer.Get<IServerController>().GetResourceCatalog().GetDynamicObjects<DynamicService>(workspaceID, serviceID);
             var firstOrDefault = services.FirstOrDefault();
             if(firstOrDefault != null)
             {
@@ -86,7 +88,7 @@ namespace Dev2.Runtime.ESB.Control
                 throw new InvalidDataException("Empty or null service passed in");
             }
 
-            var sources = ResourceCatalog.Instance.GetDynamicObjects<Source>(workspaceID, sourceName);
+            var sources = CustomContainer.Get<IServerController>().GetResourceCatalog().GetDynamicObjects<Source>(workspaceID, sourceName);
             return sources.FirstOrDefault();
         }
 

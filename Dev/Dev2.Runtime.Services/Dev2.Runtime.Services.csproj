@@ -250,7 +250,6 @@
     <Compile Include="Execution\IExecutableService.cs" />
     <Compile Include="Execution\ExecutableServiceKey.cs" />
     <Compile Include="Hosting\ServiceDefinitionLoader.cs" />
-    <Compile Include="Hosting\IResourceCatalog.cs" />
     <Compile Include="Hosting\ManagementServiceResource.cs" />
     <Compile Include="Hosting\ResourceCatalogResult.cs" />
     <Compile Include="Network\IStudioNetworkSession.cs" />

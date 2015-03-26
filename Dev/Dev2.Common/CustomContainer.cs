@@ -22,11 +22,16 @@ namespace Dev2.Common
 
         public static void Register<T>(T concrete)
         {
-            if (RegisterdTypes.ContainsKey(typeof(T)))
+            if (IsTypeRegistered<T>())
             {
                 DeRegister<T>();
             }
             RegisterdTypes.Add(typeof(T), concrete);
+        }
+
+        public static bool IsTypeRegistered<T>()
+        {
+            return RegisterdTypes.ContainsKey(typeof(T));
         }
 
         public static T Get<T>() where T : class

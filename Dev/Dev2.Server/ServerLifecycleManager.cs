@@ -303,7 +303,7 @@ namespace Dev2
             }
             XmlConfigurator.ConfigureAndWatch(new FileInfo(settingsConfigFile));
             InitializeCommandLineArguments();
-            CustomContainer.Register<IServerController>(new ServerController(new WorkflowExecutionController()));
+            CustomContainer.Register<IServerController>(new ServerController(new WorkflowExecutionController(),new ResourceCatalogController()));
         }
 
         #endregion
@@ -1598,14 +1598,6 @@ namespace Dev2
         bool LoadResourceCatalog()
         {
             MigrateOldResources();
-            Write("Loading resource catalog...  ");
-            // First call initializes instance
-#pragma warning disable 168
-            // ReSharper disable UnusedVariable
-            var catalog = ResourceCatalog.Instance;
-            // ReSharper restore UnusedVariable
-#pragma warning restore 168
-            WriteLine("done.");
             return true;
         }
 
@@ -1635,7 +1627,7 @@ namespace Dev2
                 foreach(var oldResourceFile in oldResourceFiles)
                 {
                     var oldResourceXml = XElement.Load(oldResourceFile);
-                    ResourceCatalog.Instance.SaveResource(GlobalConstants.ServerWorkspaceID, oldResourceXml.ToStringBuilder());
+                    CustomContainer.Get<IServerController>().GetResourceCatalog().SaveResource(GlobalConstants.ServerWorkspaceID, oldResourceXml.ToStringBuilder());
                 }
                 DirectoryHelper.CleanUp(oldResourceFolder);
             }

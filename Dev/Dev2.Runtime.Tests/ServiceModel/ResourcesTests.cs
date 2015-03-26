@@ -20,6 +20,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Dev2.Common.Interfaces;
+using Moq;
+using Warewolf.Server.AntiCorruptionLayer;
+using Warewolf.Server.Controllers;
 
 // ReSharper disable InconsistentNaming
 namespace Dev2.Tests.Runtime.ServiceModel
@@ -95,6 +99,10 @@ namespace Dev2.Tests.Runtime.ServiceModel
         {
             var workspaceID = Guid.NewGuid();
             var workspacePath = EnvironmentVariables.GetWorkspacePath(workspaceID);
+            var resourceCatalog = new ResourceCatalog();
+            var mockResourceCatalogController = new Mock<IResourceCatalogController>();
+            mockResourceCatalogController.Setup(controller => controller.GetResourceCatalog()).Returns(resourceCatalog);
+            CustomContainer.Register(mockResourceCatalogController.Object);
             try
             {
                 const int Modulo = 2;
@@ -108,7 +116,7 @@ namespace Dev2.Tests.Runtime.ServiceModel
                         ResourcePath = string.Format("My Path {0}", i),
                         ResourceType = (i % Modulo == 0) ? ResourceType.DbSource : ResourceType.Unknown
                     };
-                    ResourceCatalog.Instance.SaveResource(workspaceID, resource);
+                    resourceCatalog.SaveResource(workspaceID, resource);
                 }
                 var resources = new Dev2.Runtime.ServiceModel.Resources();
                 var result = resources.Sources("{\"resourceType\":\"" + ResourceType.DbSource + "\"}", workspaceID, Guid.Empty);
@@ -132,6 +140,10 @@ namespace Dev2.Tests.Runtime.ServiceModel
         {
             var workspaceID = Guid.NewGuid();
             var workspacePath = EnvironmentVariables.GetWorkspacePath(workspaceID);
+            var resourceCatalog = new ResourceCatalog();
+            var mockResourceCatalogController = new Mock<IResourceCatalogController>();
+            mockResourceCatalogController.Setup(controller => controller.GetResourceCatalog()).Returns(resourceCatalog);
+            CustomContainer.Register(mockResourceCatalogController.Object);
             try
             {
                 const int Modulo = 2;
@@ -145,7 +157,7 @@ namespace Dev2.Tests.Runtime.ServiceModel
                         ResourceName = string.Format("My Name {0}", i),
                         ResourceType = (i % Modulo == 0) ? ResourceType.WorkflowService : ResourceType.Unknown
                     };
-                    ResourceCatalog.Instance.SaveResource(workspaceID, resource);
+                    resourceCatalog.SaveResource(workspaceID, resource);
                 }
                 var resources = new Dev2.Runtime.ServiceModel.Resources();
                 var result = resources.Services(ResourceType.WorkflowService.ToString(), workspaceID, Guid.Empty);
@@ -223,7 +235,9 @@ namespace Dev2.Tests.Runtime.ServiceModel
                 var resources = new Dev2.Runtime.ServiceModel.Resources();
                 //---------------Assert Preconditions------------------------------
                 Assert.IsNotNull(resourcePath);
-                var resource = ResourceCatalog.Instance.GetResource(workspaceID, resourcePath.Value);
+                var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+                CustomContainer.Register<IServerController>(controller);
+                var resource = CustomContainer.Get<IServerController>().GetResourceCatalog().GetResource(workspaceID, resourcePath.Value);
                 Assert.IsNotNull(resource);
                 //------------Execute Test---------------------------
                 var dataListInputVariables = resources.DataListInputVariables(resource.ResourceID.ToString(), workspaceID, Guid.Empty);
@@ -262,7 +276,7 @@ namespace Dev2.Tests.Runtime.ServiceModel
                 var resources = new Dev2.Runtime.ServiceModel.Resources();
                 //-----------------Assert Preconditions-----------------------------
                 Assert.IsNotNull(resourcePath);
-                var resource = ResourceCatalog.Instance.GetResource(workspaceID, resourcePath.Value);
+                var resource = new ResourceCatalog().GetResource(workspaceID, resourcePath.Value);
                 Assert.IsNotNull(resource);
                 //------------Execute Test---------------------------
                 var dataListInputVariables = resources.DataListInputVariables(resource.ResourceID.ToString(), workspaceID, Guid.Empty);
@@ -292,6 +306,10 @@ namespace Dev2.Tests.Runtime.ServiceModel
             //Isolate PathsAndNames for workflows as a functional unit
             var workspaceID = Guid.NewGuid();
             var workspacePath = EnvironmentVariables.GetWorkspacePath(workspaceID);
+            var resourceCatalog = new ResourceCatalog();
+            var mockResourceCatalogController = new Mock<IResourceCatalogController>();
+            mockResourceCatalogController.Setup(controller => controller.GetResourceCatalog()).Returns(resourceCatalog);
+            CustomContainer.Register(mockResourceCatalogController.Object);
             try
             {
                 const int Modulo = 3;
@@ -320,7 +338,7 @@ namespace Dev2.Tests.Runtime.ServiceModel
                             resource.ResourceType = ResourceType.PluginService;
                             break;
                     }
-                    ResourceCatalog.Instance.SaveResource(workspaceID, resource);
+                    resourceCatalog.SaveResource(workspaceID, resource);
                 }
                 var resources = new Dev2.Runtime.ServiceModel.Resources();
                 const string ExpectedJson = "{\"Names\":[\"My Name 1\",\"My Name 4\",\"My Name 7\"],\"Paths\":[\"DbService\"]}";
@@ -351,6 +369,10 @@ namespace Dev2.Tests.Runtime.ServiceModel
             //Isolate PathsAndNames for workflows as a functional unit
             var workspaceID = Guid.NewGuid();
             var workspacePath = EnvironmentVariables.GetWorkspacePath(workspaceID);
+            var resourceCatalog = new ResourceCatalog();
+            var mockResourceCatalogController = new Mock<IResourceCatalogController>();
+            mockResourceCatalogController.Setup(controller => controller.GetResourceCatalog()).Returns(resourceCatalog);
+            CustomContainer.Register(mockResourceCatalogController.Object);
             try
             {
                 const int Modulo = 4;
@@ -383,7 +405,7 @@ namespace Dev2.Tests.Runtime.ServiceModel
                             resource.ResourceType = ResourceType.ServerSource;
                             break;
                     }
-                    ResourceCatalog.Instance.SaveResource(workspaceID, resource);
+                    resourceCatalog.SaveResource(workspaceID, resource);
                 }
                 var resources = new Dev2.Runtime.ServiceModel.Resources();
                 const string ExpectedJson = "{\"Names\":[\"My Name 3\",\"My Name 7\"],\"Paths\":[\"ServerSource\"]}";

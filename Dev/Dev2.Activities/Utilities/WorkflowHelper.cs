@@ -220,10 +220,11 @@ namespace Dev2.Utilities
                 results = resultscache[resourceID];
             }
             //// Compile the C# expression.
-            else{
-            var compiler = new TextExpressionCompiler(settings);
-             results = compiler.Compile(); // Nasty MS memory leak ;(
-             resultscache.TryAdd(resourceID,results);
+            else
+            {
+                var compiler = new TextExpressionCompiler(settings);
+                results = compiler.Compile(); // Nasty MS memory leak ;(
+                resultscache.TryAdd(resourceID, results);
             }
 
             if(results.HasErrors)
@@ -235,7 +236,7 @@ namespace Dev2.Utilities
                 }
                 throw new Exception(err.ToString());
             }
-
+            
             var compiledExpressionRoot = Activator.CreateInstance(results.ResultType, new object[] { dynamicActivity }) as ICompiledExpressionRoot;
             CompiledExpressionInvoker.SetCompiledExpressionRootForImplementation(dynamicActivity, compiledExpressionRoot);
         }

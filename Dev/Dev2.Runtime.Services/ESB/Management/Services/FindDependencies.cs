@@ -21,8 +21,6 @@ using Dev2.Common.Interfaces.Data;
 using Dev2.Communication;
 using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
-using Dev2.Runtime.Hosting;
-using Dev2.Workspaces;
 using ServiceStack.Common.Extensions;
 
 namespace Dev2.Runtime.ESB.Management.Services
@@ -59,7 +57,7 @@ namespace Dev2.Runtime.ESB.Management.Services
             {
                 throw new InvalidDataContractException("ResourceName is empty or null");
             }
-            var resource= ResourceCatalog.Instance.GetResource(theWorkspace.ID, Guid.Parse(resourceId));
+            var resource= CustomContainer.Get<IServerController>().GetResourceCatalog().GetResource(theWorkspace.ID, Guid.Parse(resourceId));
             var resourceName = resource.ResourcePath;
             if(!string.IsNullOrEmpty(dependsOnMeString))
             {
@@ -102,18 +100,19 @@ namespace Dev2.Runtime.ESB.Management.Services
             var resourceName = res.ResourceName;
             var resourceCat = res.ResourcePath;
             var resourceId = res.ResourceID;
-            var dependants = ResourceCatalog.Instance.GetDependants(Guid.Empty, resourceId);
-            dependants.AddRange(ResourceCatalog.Instance.GetDependants(workspaceId, resourceId));
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
+            var dependants = resourceCatalog.GetDependants(Guid.Empty, resourceId);
+            dependants.AddRange(resourceCatalog.GetDependants(workspaceId, resourceId));
             dependants = dependants.Distinct().ToList();
             var sb = new StringBuilder();
             dependants.ForEach(c =>
             {
-                var resource = ResourceCatalog.Instance.GetResource(workspaceId, c) ?? ResourceCatalog.Instance.GetResource(GlobalConstants.ServerWorkspaceID, c);
+                var resource = resourceCatalog.GetResource(workspaceId, c) ?? resourceCatalog.GetResource(GlobalConstants.ServerWorkspaceID, c);
 
                 if(resource != null)
                 {
-                    const string BrokenString = "false";
-                    sb.Append(string.Format("<node id=\"{0}\" x=\"\" y=\"\" broken=\"{1}\">", resource.ResourceName, BrokenString));
+                    const string brokenString = "false";
+                    sb.Append(string.Format("<node id=\"{0}\" x=\"\" y=\"\" broken=\"{1}\">", resource.ResourceName, brokenString));
                     sb.Append(string.Format("<dependency id=\"{0}\" />", resourceName));
                     sb.Append("</node>");
                 }
@@ -156,10 +155,10 @@ namespace Dev2.Runtime.ESB.Management.Services
         private StringBuilder FindDependenciesRecursive(Guid resourceGuid, Guid workspaceId)
         {
             var sb = new StringBuilder();
-            var resource = ResourceCatalog.Instance.GetResource(workspaceId, resourceGuid);
+            var resource = CustomContainer.Get<IServerController>().GetResourceCatalog().GetResource(workspaceId, resourceGuid);
             if(resource != null)
             {
-                const string BrokenString = "false";
+                const string brokenString = "false";
                 var dependencies = resource.Dependencies;
                 if(dependencies != null)
                 {
@@ -170,7 +169,7 @@ namespace Dev2.Runtime.ESB.Management.Services
                     sb.Append("</node>");
                     dependencies.ToList().ForEach(c => sb.Append(FindDependenciesRecursive(c.ResourceID, workspaceId)));
                 }
-                sb.Append(string.Format("<node id=\"{0}\" x=\"\" y=\"\" broken=\"{1}\">", resource.ResourcePath, BrokenString));
+                sb.Append(string.Format("<node id=\"{0}\" x=\"\" y=\"\" broken=\"{1}\">", resource.ResourcePath, brokenString));
                 sb.Append("</node>");
             }
             return sb;

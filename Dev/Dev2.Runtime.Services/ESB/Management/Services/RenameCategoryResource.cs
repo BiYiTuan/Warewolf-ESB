@@ -19,8 +19,6 @@ using Dev2.Common.Interfaces.Core.DynamicServices;
 using Dev2.Communication;
 using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
-using Dev2.Runtime.Hosting;
-using Dev2.Workspaces;
 
 namespace Dev2.Runtime.ESB.Management.Services
 {
@@ -71,7 +69,7 @@ namespace Dev2.Runtime.ESB.Management.Services
                 throw new InvalidDataContractException("No value provided for ResourceType parameter.");
             }
             Dev2Logger.Log.Info(String.Format( "Rename Category. Old {0} New {1} Type{2}",oldCategory,newCategory,resourceType));
-            var saveResult = ResourceCatalog.Instance.RenameCategory(Guid.Empty, oldCategory, newCategory);
+            var saveResult = CustomContainer.Get<IServerController>().GetResourceCatalog().RenameCategory(Guid.Empty, oldCategory, newCategory);
 
             ExecuteMessage msg = new ExecuteMessage { HasError = false };
             msg.SetMessage(saveResult.Message);

@@ -21,7 +21,6 @@ using Dev2.Communication;
 using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
 using Dev2.Runtime.Hosting;
-using Dev2.Workspaces;
 
 namespace Dev2.Runtime.ESB.Management.Services
 {
@@ -93,7 +92,7 @@ namespace Dev2.Runtime.ESB.Management.Services
 
         public IServerVersionRepository ServerVersionRepo
         {
-            get { return _serverExplorerRepository ?? new ServerVersionRepository(new VersionStrategy(), ResourceCatalog.Instance, new DirectoryWrapper(), EnvironmentVariables.GetWorkspacePath(GlobalConstants.ServerWorkspaceID), new FileWrapper()); }
+            get { return _serverExplorerRepository ?? new ServerVersionRepository(new VersionStrategy(), CustomContainer.Get<IServerController>().GetResourceCatalog(), new DirectoryWrapper(), EnvironmentVariables.GetWorkspacePath(GlobalConstants.ServerWorkspaceID), new FileWrapper()); }
             set { _serverExplorerRepository = value; }
         }
 

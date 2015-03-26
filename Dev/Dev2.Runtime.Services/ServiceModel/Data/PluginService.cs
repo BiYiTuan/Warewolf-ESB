@@ -14,9 +14,9 @@ using System.Linq;
 using System.Xml.Linq;
 using Dev2.Common;
 using Dev2.Common.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Core.DynamicServices;
 using Dev2.DynamicServices;
-using Dev2.Runtime.Hosting;
 
 namespace Dev2.Runtime.ServiceModel.Data
 {
@@ -59,7 +59,7 @@ namespace Dev2.Runtime.ServiceModel.Data
                 var mySource = action.AttributeSafe("SourceName");
 
                 // Now look up the old source and fetch namespace ;)
-                var services = ResourceCatalog.Instance.GetDynamicObjects<Source>(GlobalConstants.ServerWorkspaceID, mySource);
+                var services = CustomContainer.Get<IServerController>().GetResourceCatalog().GetDynamicObjects<Source>(GlobalConstants.ServerWorkspaceID, mySource);
 
                 var tmp = services.FirstOrDefault();
 

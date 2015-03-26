@@ -15,6 +15,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Common.Interfaces.Explorer;
 using Dev2.Data.Binary_Objects;
@@ -228,18 +230,19 @@ namespace Dev2.Runtime.ServiceModel
         public string DataListInputVariables(string resourceId, Guid workspaceId, Guid dataListId)
         {
             Guid rsId;
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
             if(!Guid.TryParse(resourceId, out rsId))
             {
                 RaiseError(new ArgumentException("Invalid ResouceID."));
                 return "";
             }
-            var resource = ResourceCatalog.Instance.GetResource(workspaceId, rsId);
+            var resource = resourceCatalog.GetResource(workspaceId, rsId);
             if(resource == null)
             {
                 RaiseError(new ArgumentException("Workflow not found."));
                 return "";
             }
-            var services = ResourceCatalog.Instance.GetDynamicObjects(resource);
+            var services = resourceCatalog.GetDynamicObjects(resource);
 
             var tmp = services.FirstOrDefault();
             var result = new StringBuilder("<DataList></DataList>");

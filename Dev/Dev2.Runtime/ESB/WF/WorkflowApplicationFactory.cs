@@ -26,8 +26,6 @@ using Dev2.DynamicServices.Objects.Base;
 using Dev2.Instrumentation;
 using Dev2.Network.Execution;
 using Dev2.Runtime.Execution;
-using Dev2.Runtime.Hosting;
-using Dev2.Workspaces;
 using ServiceStack.Common.Extensions;
 
 namespace Dev2.Runtime.ESB.WF
@@ -46,7 +44,7 @@ namespace Dev2.Runtime.ESB.WF
     /// </summary>
     public class WorkflowApplicationFactory: IWorkflowApplicationFactory<Activity>
     {
-        public static long Balance = 0;
+        public static long Balance;
         private DateTime _runTime;
 
         public IErrorResultTO AllErrors { get; private set; }
@@ -107,11 +105,11 @@ namespace Dev2.Runtime.ESB.WF
 
             WorkflowApplication wfApp = null;
 
-            Guid parentInstanceID = FetchParentInstanceId(dataTransferObject);
+            Guid parentInstanceId = FetchParentInstanceId(dataTransferObject);
 
-            if(parentInstanceID != Guid.Empty)
+            if(parentInstanceId != Guid.Empty)
             {
-                inputarguments.Add("ParentWorkflowInstanceId", parentInstanceID);
+                inputarguments.Add("ParentWorkflowInstanceId", parentInstanceId);
 
                 if(!string.IsNullOrEmpty(dataTransferObject.ParentServiceName))
                 {
@@ -122,7 +120,7 @@ namespace Dev2.Runtime.ESB.WF
             // Set the old AmbientDatalist as the DataListID ;)
             inputarguments.Add("AmbientDataList", new List<string> { dataTransferObject.DataListID.ToString() });
 
-            if((parentInstanceID != Guid.Empty && instanceId == Guid.Empty) || string.IsNullOrEmpty(bookmarkName))
+            if((parentInstanceId != Guid.Empty && instanceId == Guid.Empty) || string.IsNullOrEmpty(bookmarkName))
             {
                 wfApp = new WorkflowApplication(workflowActivity, inputarguments);
             }
@@ -279,8 +277,8 @@ namespace Dev2.Runtime.ESB.WF
             private WorkflowApplication _instance;
             private IWorkspace _workspace;
             private readonly bool _isDebug;
-            private Guid _parentWorkflowInstanceID;
-            private Guid _currentInstanceID;
+            private Guid _parentWorkflowInstanceId;
+            private Guid _currentInstanceId;
             private readonly IList<object> _executionExtensions;
             private ManualResetEventSlim _waitHandle;
             private IDSFDataObject _result;
@@ -305,7 +303,7 @@ namespace Dev2.Runtime.ESB.WF
                 _workspace = workspace;
                 _executionExtensions = executionExtensions;
                 _isDebug = isDebug;
-                _parentWorkflowInstanceID = parentWorkflowInstanceId;
+                _parentWorkflowInstanceId = parentWorkflowInstanceId;
                 _executionToken = executionToken;
 
                 _instance.PersistableIdle = OnPersistableIdle;
@@ -426,10 +424,10 @@ namespace Dev2.Runtime.ESB.WF
 
             public void Resume(IDSFDataObject dataObject)
             {
-                var instanceID = dataObject.WorkflowInstanceId;
+                var instanceId = dataObject.WorkflowInstanceId;
                 var bookmarkName = dataObject.CurrentBookmarkName;
                 var existingDlid = dataObject.DataListID;
-                _instance.Load(instanceID);
+                _instance.Load(instanceId);
                 _instance.ResumeBookmark(bookmarkName, existingDlid);
             }
 
@@ -460,18 +458,18 @@ namespace Dev2.Runtime.ESB.WF
 
                         var parentServiceNameStr = string.IsNullOrEmpty(_result.ParentServiceName) ? string.Empty : _result.ParentServiceName;
 
-                        if(!string.IsNullOrEmpty(parentServiceNameStr) && Guid.TryParse(parentId.ToString(), out _parentWorkflowInstanceID))
+                        if(!string.IsNullOrEmpty(parentServiceNameStr) && Guid.TryParse(parentId.ToString(), out _parentWorkflowInstanceId))
                         {
-                            if(_parentWorkflowInstanceID != _currentInstanceID)
+                            if(_parentWorkflowInstanceId != _currentInstanceId)
                             {
                                 // BUG 7850 - TWR - 2013.03.11 - ResourceCatalog refactor
-                                var services = ResourceCatalog.Instance.GetDynamicObjects<DynamicServiceObjectBase>(_workspace.ID, parentServiceNameStr);
+                                var services = CustomContainer.Get<IServerController>().GetResourceCatalog().GetDynamicObjects<DynamicServiceObjectBase>(_workspace.ID, parentServiceNameStr);
                                 if(services != null && services.Count > 0)
                                 {
                                     var service = services[0] as DynamicService;
                                     if(service != null)
                                     {
-                                        _currentInstanceID = _parentWorkflowInstanceID;
+                                        _currentInstanceId = _parentWorkflowInstanceId;
 
                                         var actionSet = service.Actions;
 
@@ -483,7 +481,7 @@ namespace Dev2.Runtime.ESB.WF
                                             try
                                             {
                                                 IErrorResultTO invokeErrors;
-                                                _result = _owner.InvokeWorkflow(new WarewolfActivity(wfActivity.Value), _result, _executionExtensions, _parentWorkflowInstanceID, _workspace, "dsfResumption", out invokeErrors);
+                                                _result = _owner.InvokeWorkflow(new WarewolfActivity(wfActivity.Value), _result, _executionExtensions, _parentWorkflowInstanceId, _workspace, "dsfResumption", out invokeErrors);
                                                 // attach any execution errors
                                                 if(AllErrors != null)
                                                 {

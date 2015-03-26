@@ -45,7 +45,7 @@ namespace Dev2.Data.DataListCache {
         public IBinaryDataList ReadDatalist(Guid datalistID, ErrorResultTO errors) {
 
             IBinaryDataList result;
-            Repo.TryGetValue(datalistID, out result);
+            Repo.TryGetValue(datalistID, out result);            
             return result;
         }
 

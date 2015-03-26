@@ -12,6 +12,8 @@
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Communication;
 using Dev2.Common.Interfaces.Infrastructure.SharedModels;
 using Dev2.Communication;
@@ -21,6 +23,8 @@ using Dev2.Runtime.WebServer.Hubs;
 using Microsoft.AspNet.SignalR.Hubs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Warewolf.Server.AntiCorruptionLayer;
+using Warewolf.Server.Controllers;
 
 namespace Dev2.Tests.Runtime.WebServer.Hubs
 {
@@ -139,6 +143,8 @@ namespace Dev2.Tests.Runtime.WebServer.Hubs
     {
         public MockEsbHub()
         {
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController());
+            CustomContainer.Register<IServerController>(controller);
             SetupEvents();
         }
 

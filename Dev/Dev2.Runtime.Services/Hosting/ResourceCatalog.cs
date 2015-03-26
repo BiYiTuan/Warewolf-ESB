@@ -15,13 +15,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Dev2.Common;
 using Dev2.Common.Common;
 using Dev2.Common.ExtMethods;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Core.DynamicServices;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Common.Interfaces.Hosting;
@@ -35,7 +35,6 @@ using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
 using Dev2.DynamicServices.Objects.Base;
 using Dev2.Runtime.Compiler;
-using Dev2.Runtime.ESB.Management;
 using Dev2.Runtime.Security;
 using Dev2.Runtime.ServiceModel.Data;
 using ServiceStack.Common.Extensions;
@@ -55,43 +54,6 @@ namespace Dev2.Runtime.Hosting
         readonly ConcurrentDictionary<string, List<DynamicServiceObjectBase>> _frequentlyUsedServices = new ConcurrentDictionary<string, List<DynamicServiceObjectBase>>();
         readonly IServerVersionRepository _versioningRepository;
         #region Singleton Instance
-
-        //
-        // Multi-threaded implementation - see http://msdn.microsoft.com/en-us/library/ff650316.aspx
-        //
-        // This approach ensures that only one instance is created and only when the instance is needed. 
-        // Also, the variable is declared to be volatile to ensure that assignment to the instance variable
-        // completes before the instance variable can be accessed. Lastly, this approach uses a syncRoot 
-        // instance to lock on, rather than locking on the type itself, to avoid deadlocks.
-        //
-        static volatile ResourceCatalog _instance;
-        static readonly object SyncRoot = new Object();
-        public Action<IResource> ResourceSaved;
-        public Action<Guid, IList<ICompileMessageTO>> SendResourceMessages;
-        /// <summary>
-        /// Gets the instance.
-        /// </summary>
-        public static ResourceCatalog Instance
-        {
-            get
-            {
-                if(_instance == null)
-                {
-                    lock(SyncRoot)
-                    {
-                        if(_instance == null)
-                        {
-                            _instance = new ResourceCatalog(EsbManagementServiceLocator.GetServices());
-                            CompileMessageRepo.Instance.Ping();
-
-                        }
-                    }
-                }
-
-                return _instance;
-            }
-        }
-
 
         #endregion
 
@@ -136,6 +98,9 @@ namespace Dev2.Runtime.Hosting
 
         #region Properties
 
+        public Action<IResource> ResourceSaved { get; set; }
+        public Action<Guid, IList<ICompileMessageTO>> SendResourceMessages { get; set; }
+
         public int WorkspaceCount
         {
             get
@@ -148,29 +113,29 @@ namespace Dev2.Runtime.Hosting
 
         #region GetResourceCount
 
-        public int GetResourceCount(Guid workspaceID)
+        public int GetResourceCount(Guid workspaceId)
         {
-            return GetResources(workspaceID).Count;
+            return GetResources(workspaceId).Count;
         }
 
         #endregion
 
         #region RemoveWorkspace
 
-        public void RemoveWorkspace(Guid workspaceID)
+        public void RemoveWorkspace(Guid workspaceId)
         {
-            object workspaceLock;
+            object internalWorkspaceLock;
             lock(_loadLock)
             {
-                if(!_workspaceLocks.TryRemove(workspaceID, out workspaceLock))
+                if(!_workspaceLocks.TryRemove(workspaceId, out internalWorkspaceLock))
                 {
-                    workspaceLock = new object();
+                    internalWorkspaceLock = new object();
                 }
             }
-            lock(workspaceLock)
+            lock(internalWorkspaceLock)
             {
                 List<IResource> resources;
-                _workspaceResources.TryRemove(workspaceID, out resources);
+                _workspaceResources.TryRemove(workspaceId, out resources);
             }
         }
 
@@ -178,7 +143,7 @@ namespace Dev2.Runtime.Hosting
 
         #region GetResource
 
-        public IResource GetResource(Guid workspaceID, string resourceName, ResourceType resourceType = ResourceType.Unknown, string version = null)
+        public IResource GetResource(Guid workspaceId, string resourceName, ResourceType resourceType = ResourceType.Unknown, string version = null)
         {
             while(true)
             {
@@ -193,11 +158,11 @@ namespace Dev2.Runtime.Hosting
                 {
                     resourceNameToSearchFor = resourceNameToSearchFor.Substring(endOfResourcePath + 1);
                 }
-                var resources = GetResources(workspaceID);
+                var resources = GetResources(workspaceId);
                 var foundResource = resources.FirstOrDefault(r => string.Equals(r.ResourcePath ?? "", resourcePath, StringComparison.InvariantCultureIgnoreCase) && string.Equals(r.ResourceName, resourceNameToSearchFor, StringComparison.InvariantCultureIgnoreCase) && (resourceType == ResourceType.Unknown || r.ResourceType == resourceType));
-                if(foundResource == null && workspaceID != GlobalConstants.ServerWorkspaceID)
+                if(foundResource == null && workspaceId != GlobalConstants.ServerWorkspaceID)
                 {
-                    workspaceID = GlobalConstants.ServerWorkspaceID;
+                    workspaceId = GlobalConstants.ServerWorkspaceID;
                     continue;
                 }
                 return foundResource;
@@ -208,7 +173,8 @@ namespace Dev2.Runtime.Hosting
         #endregion
 
         #region GetResourceContents
-        object workspaceLock = new object();
+
+        readonly object _workspaceLock = new object();
         /// <summary>
         /// Gets the contents of the resource with the given name.
         /// </summary>
@@ -218,10 +184,10 @@ namespace Dev2.Runtime.Hosting
         public StringBuilder GetResourceContents(Guid workspaceID, Guid resourceID)
         {
             IResource foundResource = null;
-            List<IResource> resources;
-            
-            lock (workspaceLock)
+
+            lock (_workspaceLock)
             {
+                List<IResource> resources;
                 if (_workspaceResources.TryGetValue(workspaceID, out resources))
                 {
                     foundResource = resources.FirstOrDefault(resource => resource.ResourceID == resourceID);
@@ -395,7 +361,7 @@ namespace Dev2.Runtime.Hosting
         {
             if(string.IsNullOrEmpty(resourceName) && string.IsNullOrEmpty(type))
             {
-                throw new InvalidDataContractException("ResourceName and Type are missing from the request");
+                throw new Exception("ResourceName and Type are missing from the request");
             }
 
             if(string.IsNullOrEmpty(resourceName) || resourceName == "*")
@@ -415,7 +381,7 @@ namespace Dev2.Runtime.Hosting
             return result;
         }
 
-        public IList<Resource> GetResourceList(Guid workspaceId, string guidCsv, string type)
+        public IList<IResource> GetResourceList(Guid workspaceId, string guidCsv, string type)
         {
             if(type == null)
             {
@@ -442,14 +408,14 @@ namespace Dev2.Runtime.Hosting
             var resources = workspaceResources.FindAll(r => guids.Contains(r.ResourceID)
                                                             && resourceTypes.Contains(r.ResourceType));
 
-            return resources.Cast<Resource>().ToList();
+            return resources.ToList();
         }
 
-        public IList<Resource> GetResourceList(Guid workspaceId, string resourceName, string type, string userRoles, bool useContains = true)
+        public IList<IResource> GetResourceList(Guid workspaceId, string resourceName, string type, string userRoles, bool useContains = true)
         {
             if(string.IsNullOrEmpty(resourceName) && string.IsNullOrEmpty(type))
             {
-                throw new InvalidDataContractException("ResourceName and Type are missing from the request");
+                throw new Exception("ResourceName and Type are missing from the request");
             }
 
             if(string.IsNullOrEmpty(resourceName) || resourceName == "*")
@@ -465,7 +431,7 @@ namespace Dev2.Runtime.Hosting
                 : workspaceResources.FindAll(r => r.ResourcePath.Equals(resourceName, StringComparison.InvariantCultureIgnoreCase)
                                                 && resourceTypes.Contains(r.ResourceType));
 
-            return resources.Cast<Resource>().ToList();
+            return resources.ToList();
         }
 
         #endregion
@@ -474,8 +440,8 @@ namespace Dev2.Runtime.Hosting
 
         public void LoadWorkspace(Guid workspaceID)
         {
-            var workspaceLock = GetWorkspaceLock(workspaceID);
-            lock(workspaceLock)
+            var internalWorkspaceLock = GetWorkspaceLock(workspaceID);
+            lock(internalWorkspaceLock)
             {
                 _workspaceResources.AddOrUpdate(workspaceID,
                     id => LoadWorkspaceImpl(workspaceID),
@@ -560,7 +526,7 @@ namespace Dev2.Runtime.Hosting
 
         #region SaveResource
 
-        public ResourceCatalogResult SaveResource(Guid workspaceID, StringBuilder resourceXml, string userRoles = null, string reason = "", string user = "")
+        public IResourceCatalogResult SaveResource(Guid workspaceID, StringBuilder resourceXml, string userRoles = null, string reason = "", string user = "")
         {
 
             try
@@ -596,7 +562,7 @@ namespace Dev2.Runtime.Hosting
             }
         }
 
-        public ResourceCatalogResult SaveResource(Guid workspaceID, IResource resource, string userRoles = null, string reason = "", string user = "")
+        public IResourceCatalogResult SaveResource(Guid workspaceID, IResource resource, string userRoles = null, string reason = "", string user = "")
         {
 
             _versioningRepository.StoreVersion(resource, user, reason, workspaceID);
@@ -650,7 +616,7 @@ namespace Dev2.Runtime.Hosting
 
         #region DeleteResource
 
-        public ResourceCatalogResult DeleteResource(Guid workspaceID, string resourceName, string type, string userRoles = null, bool deleteVersions = true)
+        public IResourceCatalogResult DeleteResource(Guid workspaceID, string resourceName, string type, string userRoles = null, bool deleteVersions = true)
         {
             var workspaceLock = GetWorkspaceLock(workspaceID);
             lock(workspaceLock)
@@ -666,7 +632,7 @@ namespace Dev2.Runtime.Hosting
 
                 if(string.IsNullOrEmpty(resourceName) || string.IsNullOrEmpty(type))
                 {
-                    throw new InvalidDataContractException("ResourceName or Type is missing from the request");
+                    throw new Exception("ResourceName or Type is missing from the request");
                 }
 
                 var resourceTypes = ResourceTypeConverter.ToResourceTypes(type, false);
@@ -698,7 +664,7 @@ namespace Dev2.Runtime.Hosting
             }
         }
 
-        public ResourceCatalogResult DeleteResource(Guid workspaceID, Guid resourceID, string type, string userRoles = null, bool deleteVersions = true)
+        public IResourceCatalogResult DeleteResource(Guid workspaceID, Guid resourceID, string type, string userRoles = null, bool deleteVersions = true)
         {
             try
             {
@@ -709,7 +675,7 @@ namespace Dev2.Runtime.Hosting
                 {
                     if(resourceID == Guid.Empty || string.IsNullOrEmpty(type))
                     {
-                        throw new InvalidDataContractException("ResourceID or Type is missing from the request");
+                        throw new Exception("ResourceID or Type is missing from the request");
                     }
 
                     var resourceTypes = ResourceTypeConverter.ToResourceTypes(type, false);
@@ -831,18 +797,7 @@ namespace Dev2.Runtime.Hosting
                 // ReSharper restore SimplifyLinqExpression
             }
 
-            //
-            // Calculate the files which are to be deleted from the destination, this respects the delete parameter
-            //
-            var filesToDeleteFromDestination = new List<FileInfo>();
-            if(delete)
-            {
-                filesToDeleteFromDestination.AddRange(destinationFiles
-                    // ReSharper disable SimplifyLinqExpression
-                    .Where(sf => !sourceFiles.Any(df => String.Compare(df.Name, sf.Name, StringComparison.OrdinalIgnoreCase) == 0)));
-                // ReSharper restore SimplifyLinqExpression
-            }
-
+    
             //
             // Copy files from source to desination
             //
@@ -858,14 +813,14 @@ namespace Dev2.Runtime.Hosting
         #region GetDynamicObjects
 
         public List<TServiceType> GetDynamicObjects<TServiceType>(Guid workspaceID, string resourceName, bool useContains = false)
-            where TServiceType : DynamicServiceObjectBase
+            where TServiceType : IDynamicServiceObject
         {
             if(string.IsNullOrEmpty(resourceName))
             {
                 throw new ArgumentNullException("resourceName");
             }
 
-            List<DynamicServiceObjectBase> results;
+            List<IDynamicServiceObject> results;
 
             if(useContains)
             {
@@ -875,13 +830,13 @@ namespace Dev2.Runtime.Hosting
             else
             {
                 var resource = GetResource(workspaceID, resourceName);
-                results = resource == null ? new List<DynamicServiceObjectBase>() : GetDynamicObjects(resource);
+                results = resource == null ? new List<IDynamicServiceObject>() : GetDynamicObjects(resource);
             }
             return results.OfType<TServiceType>().ToList();
         }
 
         public List<TServiceType> GetDynamicObjects<TServiceType>(Guid workspaceID, Guid resourceID)
-            where TServiceType : DynamicServiceObjectBase
+            where TServiceType : IDynamicServiceObject
         {
             if(resourceID == Guid.Empty)
             {
@@ -889,36 +844,36 @@ namespace Dev2.Runtime.Hosting
             }
 
             var resource = GetResource(workspaceID, resourceID);
-            var results = resource == null ? new List<DynamicServiceObjectBase>() : GetDynamicObjects(resource);
+            var results = resource == null ? new List<IDynamicServiceObject>() : GetDynamicObjects(resource);
             return results.OfType<TServiceType>().ToList();
         }
 
-        public List<DynamicServiceObjectBase> GetDynamicObjects(IResource resource)
+        public List<IDynamicServiceObject> GetDynamicObjects(IResource resource)
         {
             if(resource == null)
             {
                 throw new ArgumentNullException("resource");
             }
 
-            var result = new List<DynamicServiceObjectBase>();
+            var result = new List<IDynamicServiceObject>();
             AddResourceAsDynamicServiceObject(result, resource);
             return result;
         }
 
-        public List<DynamicServiceObjectBase> GetDynamicObjects(Guid workspaceID)
+        public List<IDynamicServiceObject> GetDynamicObjects(Guid workspaceID)
         {
             var resources = GetResources(workspaceID);
             return GetDynamicObjects(resources);
         }
 
-        public List<DynamicServiceObjectBase> GetDynamicObjects(IEnumerable<IResource> resources)
+        public List<IDynamicServiceObject> GetDynamicObjects(IEnumerable<IResource> resources)
         {
             if(resources == null)
             {
                 throw new ArgumentNullException("resources");
             }
 
-            var result = new List<DynamicServiceObjectBase>();
+            var result = new List<IDynamicServiceObject>();
             foreach(var resource in resources)
             {
                 AddResourceAsDynamicServiceObject(result, resource);
@@ -983,24 +938,24 @@ namespace Dev2.Runtime.Hosting
             return null;
         }
 
-        public virtual IResource GetResource(Guid workspaceID, Guid serviceID)
+        public virtual IResource GetResource(Guid workspaceId, Guid resourceId)
         {
             IResource foundResource = null;
             try
             {
-                lock (workspaceLock)
+                lock (_workspaceLock)
                 {
                     List<IResource> resources;
-                    if (_workspaceResources.TryGetValue(workspaceID, out resources))
+                    if (_workspaceResources.TryGetValue(workspaceId, out resources))
                     {
-                        foundResource = resources.FirstOrDefault(resource => resource.ResourceID == serviceID);
+                        foundResource = resources.FirstOrDefault(resource => resource.ResourceID == resourceId);
                     }
 
-                    if (foundResource == null && workspaceID != GlobalConstants.ServerWorkspaceID)
+                    if (foundResource == null && workspaceId != GlobalConstants.ServerWorkspaceID)
                     {
                         if (_workspaceResources.TryGetValue(GlobalConstants.ServerWorkspaceID, out resources))
                         {
-                            foundResource = resources.FirstOrDefault(resource => resource.ResourceID == serviceID);
+                            foundResource = resources.FirstOrDefault(resource => resource.ResourceID == resourceId);
                         }
                     }
                 }
@@ -1012,28 +967,28 @@ namespace Dev2.Runtime.Hosting
             return foundResource;
         }
 
-        public virtual T GetResource<T>(Guid workspaceID, Guid serviceID) where T : Resource, new()
+        public virtual T GetResource<T>(Guid workspaceId, Guid resourceId) where T : IResource, new()
         {
-            var resourceContents = ResourceContents<T>(workspaceID, serviceID);
-            if(resourceContents == null || resourceContents.Length == 0) return null;
+            var resourceContents = ResourceContents<T>(workspaceId, resourceId);
+            if(resourceContents == null || resourceContents.Length == 0) return default(T);
             return GetResource<T>(resourceContents);
         }
 
-        static T GetResource<T>(StringBuilder resourceContents) where T : Resource, new()
+        static T GetResource<T>(StringBuilder resourceContents) where T : IResource, new()
         {
             var elm = resourceContents.ToXElement();
             object[] args = { elm };
             return (T)Activator.CreateInstance(typeof(T), args);
         }
 
-        public T GetResource<T>(Guid workspaceID, string resourceName) where T : Resource, new()
+        public T GetResource<T>(Guid workspaceId, string resourceName) where T : IResource, new()
         {
-            var resourceContents = ResourceContents<T>(workspaceID, resourceName);
-            if(resourceContents == null || resourceContents.Length == 0) return null;
+            var resourceContents = ResourceContents<T>(workspaceId, resourceName);
+            if(resourceContents == null || resourceContents.Length == 0) return default(T);
             return GetResource<T>(resourceContents);
         }
 
-        StringBuilder ResourceContents<T>(Guid workspaceID, string resourceName) where T : Resource, new()
+        StringBuilder ResourceContents<T>(Guid workspaceID, string resourceName) where T : IResource, new()
         {
             var resource = GetResource(workspaceID, resourceName);
             var resourceContents = GetResourceContents(resource);
@@ -1041,7 +996,7 @@ namespace Dev2.Runtime.Hosting
             return resourceContents;
         }
 
-        StringBuilder ResourceContents<T>(Guid workspaceID, Guid resourceID) where T : Resource, new()
+        StringBuilder ResourceContents<T>(Guid workspaceID, Guid resourceID) where T : IResource, new()
         {
             var resource = GetResource(workspaceID, resourceID);
             var resourceContents = GetResourceContents(resource);
@@ -1049,7 +1004,7 @@ namespace Dev2.Runtime.Hosting
             return resourceContents;
         }
 
-        static bool CheckType<T>(IResource resource) where T : Resource, new()
+        static bool CheckType<T>(IResource resource) where T : IResource, new()
         {
             if(resource != null)
             {
@@ -1115,7 +1070,7 @@ namespace Dev2.Runtime.Hosting
         ResourceCatalogResult CompileAndSave(Guid workspaceID, IResource resource, StringBuilder contents)
         {
             // Find the service before edits ;)
-            DynamicService beforeService = Instance.GetDynamicObjects<DynamicService>(workspaceID, resource.ResourceID).FirstOrDefault();
+            DynamicService beforeService = GetDynamicObjects<DynamicService>(workspaceID, resource.ResourceID).FirstOrDefault();
 
             ServiceAction beforeAction = null;
             if(beforeService != null)
@@ -1307,7 +1262,7 @@ namespace Dev2.Runtime.Hosting
         List<ICompileMessageTO> UpdateDependantResourceWithCompileMessages(Guid workspaceID, IResource resource, IList<ICompileMessageTO> messages)
         {
             var resourceId = resource.ResourceID;
-            var dependants = Instance.GetDependentsAsResourceForTrees(workspaceID, resourceId);
+            var dependants = GetDependentsAsResourceForTrees(workspaceID, resourceId);
             var dependsMessageList = new List<ICompileMessageTO>();
             foreach(var dependant in dependants)
             {
@@ -1493,7 +1448,7 @@ namespace Dev2.Runtime.Hosting
 
         #region AddResourceAsDynamicServiceObject
 
-        void AddResourceAsDynamicServiceObject(List<DynamicServiceObjectBase> result, IResource resource)
+        void AddResourceAsDynamicServiceObject(List<IDynamicServiceObject> result, IResource resource)
         {
             if(resource.ResourceType == ResourceType.ReservedService)
             {
@@ -1582,7 +1537,7 @@ namespace Dev2.Runtime.Hosting
             return dependants.ToList();
         }
 
-        public ResourceCatalogResult RenameResource(Guid workspaceID, Guid? resourceID, string newName)
+        public IResourceCatalogResult RenameResource(Guid workspaceID, Guid? resourceID, string newName)
         {
             if(resourceID == null)
             {
@@ -1592,7 +1547,7 @@ namespace Dev2.Runtime.Hosting
             {
                 throw new ArgumentNullException("newName", @"No value provided for newName");
             }
-            var resourcesToUpdate = Instance.GetResources(workspaceID, resource => resource.ResourceID == resourceID).ToArray();
+            var resourcesToUpdate = GetResources(workspaceID, resource => resource.ResourceID == resourceID).ToArray();
             try
             {
                 if(!resourcesToUpdate.Any())
@@ -1724,7 +1679,7 @@ namespace Dev2.Runtime.Hosting
             return resPath;
         }
 
-        private void RenameWhereUsed(IEnumerable<ResourceForTree> dependants, Guid workspaceID, string oldName, string newName)
+        private void RenameWhereUsed(IEnumerable<IResourceForTree> dependants, Guid workspaceID, string oldName, string newName)
         {
             foreach(var dependant in dependants)
             {
@@ -1770,14 +1725,14 @@ namespace Dev2.Runtime.Hosting
             }
         }
 
-        public ResourceCatalogResult RenameCategory(Guid workspaceID, string oldCategory, string newCategory)
+        public IResourceCatalogResult RenameCategory(Guid workspaceID, string oldCategory, string newCategory)
         {
             VerifyArguments(oldCategory, newCategory);
-            var resourcesToUpdate = Instance.GetResources(workspaceID, resource => resource.ResourcePath.StartsWith(oldCategory + "\\", StringComparison.OrdinalIgnoreCase)).ToList();
+            var resourcesToUpdate = GetResources(workspaceID, resource => resource.ResourcePath.StartsWith(oldCategory + "\\", StringComparison.OrdinalIgnoreCase)).ToList();
             return RenameCategory(workspaceID, oldCategory, newCategory, resourcesToUpdate);
         }
 
-        public ResourceCatalogResult RenameCategory(Guid workspaceID, string oldCategory, string newCategory, List<IResource> resourcesToUpdate)
+        public IResourceCatalogResult RenameCategory(Guid workspaceID, string oldCategory, string newCategory, List<IResource> resourcesToUpdate)
         {
             if(resourcesToUpdate.Count == 0)
             {
@@ -1868,12 +1823,12 @@ namespace Dev2.Runtime.Hosting
             return GetResources(workspaceID).Where(filterResources);
         }
 
-        public List<ResourceForTree> GetDependentsAsResourceForTrees(Guid workspaceID, Guid resourceId)
+        public List<IResourceForTree> GetDependentsAsResourceForTrees(Guid workspaceID, Guid resourceId)
         {
 
 
             var resources = GetResources(workspaceID);
-            var dependants = new List<ResourceForTree>();
+            var dependants = new List<IResourceForTree>();
             resources.ForEach(resource =>
             {
                 if(resource.Dependencies == null) return;

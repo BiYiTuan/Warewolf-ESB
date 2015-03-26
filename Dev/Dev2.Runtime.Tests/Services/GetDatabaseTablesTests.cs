@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using System.Text;
+using Dev2.Common;
 using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Core.DynamicServices;
 using Dev2.Runtime.ESB.Management.Services;
@@ -24,6 +25,8 @@ using Dev2.Workspaces;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Newtonsoft.Json;
+using Warewolf.Server.AntiCorruptionLayer;
+using Warewolf.Server.Controllers;
 
 // ReSharper disable InconsistentNaming
 namespace Dev2.Tests.Runtime.Services
@@ -106,7 +109,10 @@ namespace Dev2.Tests.Runtime.Services
         {
             //------------Setup for test--------------------------
             var dbSource = CreateDev2TestingDbSource();
-            ResourceCatalog.Instance.SaveResource(Guid.Empty, dbSource);
+            var resourceCatalog = new ResourceCatalog();
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController(resourceCatalog));
+            CustomContainer.Register<IServerController>(controller);
+            resourceCatalog.SaveResource(Guid.Empty, dbSource);
             string someJsonData = JsonConvert.SerializeObject(dbSource);
             var esb = new GetDatabaseTables();
             var mockWorkspace = new Mock<IWorkspace>();
@@ -135,7 +141,10 @@ namespace Dev2.Tests.Runtime.Services
         {
             //------------Setup for test--------------------------
             var dbSource = CreateDev2TestingDbSource(true);
-            ResourceCatalog.Instance.SaveResource(Guid.Empty, dbSource);
+            var resourceCatalog = new ResourceCatalog();
+            var controller = new ServerController(new WorkflowExecutionController(), new ResourceCatalogController(resourceCatalog));
+            CustomContainer.Register<IServerController>(controller);
+            resourceCatalog.SaveResource(Guid.Empty, dbSource);
             string someJsonData = JsonConvert.SerializeObject(dbSource);
             var esb = new GetDatabaseTables();
             var mockWorkspace = new Mock<IWorkspace>();

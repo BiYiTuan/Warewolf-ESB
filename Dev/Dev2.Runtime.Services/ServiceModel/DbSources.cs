@@ -13,10 +13,10 @@ using System;
 using System.Xml.Linq;
 using Dev2.Common;
 using Dev2.Common.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Core.DynamicServices;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Runtime.Diagnostics;
-using Dev2.Runtime.Hosting;
 using Dev2.Runtime.ServiceModel.Data;
 using Dev2.Runtime.ServiceModel.Esb.Brokers;
 using Newtonsoft.Json;
@@ -33,7 +33,7 @@ namespace Dev2.Runtime.ServiceModel
             var result = new DbSource { ResourceID = Guid.Empty, ResourceType = ResourceType.DbSource, AuthenticationType = AuthenticationType.Windows };
             try
             {
-                var xmlStr = ResourceCatalog.Instance.GetResourceContents(workspaceId, Guid.Parse(resourceId)).ToString();
+                var xmlStr = CustomContainer.Get<IServerController>().GetResourceCatalog().GetResourceContents(workspaceId, Guid.Parse(resourceId)).ToString();
                 if(!string.IsNullOrEmpty(xmlStr))
                 {
                     var xml = XElement.Parse(xmlStr);
@@ -68,11 +68,11 @@ namespace Dev2.Runtime.ServiceModel
                         }
                 }
 
-                ResourceCatalog.Instance.SaveResource(workspaceId, databaseSourceDetails);
+                CustomContainer.Get<IServerController>().GetResourceCatalog().SaveResource(workspaceId, databaseSourceDetails);
                 if(workspaceId != GlobalConstants.ServerWorkspaceID)
                 {
                     //2012.03.12: Ashley Lewis - BUG 9208
-                    ResourceCatalog.Instance.SaveResource(GlobalConstants.ServerWorkspaceID, databaseSourceDetails);
+                    CustomContainer.Get<IServerController>().GetResourceCatalog().SaveResource(GlobalConstants.ServerWorkspaceID, databaseSourceDetails);
                 }
 
                 return databaseSourceDetails.ToString();

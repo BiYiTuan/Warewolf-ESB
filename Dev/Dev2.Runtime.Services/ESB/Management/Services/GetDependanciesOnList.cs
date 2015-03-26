@@ -19,8 +19,6 @@ using Dev2.Common.Interfaces.Core.DynamicServices;
 using Dev2.Communication;
 using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
-using Dev2.Runtime.Hosting;
-using Dev2.Workspaces;
 using Newtonsoft.Json;
 using ServiceStack.Common.Extensions;
 
@@ -133,7 +131,7 @@ namespace Dev2.Runtime.ESB.Management.Services
         private IEnumerable<string> FetchRecursiveDependancies(Guid resourceId, Guid workspaceId)
         {
             List<string> results = new List<string>();
-            var resource = ResourceCatalog.Instance.GetResource(workspaceId, resourceId);
+            var resource = CustomContainer.Get<IServerController>().GetResourceCatalog().GetResource(workspaceId, resourceId);
             if(resource != null)
             {
                 var dependencies = resource.Dependencies;

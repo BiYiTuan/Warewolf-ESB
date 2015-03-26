@@ -5,16 +5,23 @@ namespace Warewolf.Server.AntiCorruptionLayer
 {
     public class ServerController : IServerController
     {
-        private readonly IWorkflowExecutionController<Activity> _workflowExecutionController;
+        public IWorkflowExecutionController<Activity> WorkflowExecutionController { get; private set; }
+        public IResourceCatalogController ResourceCatalogController { get; private set; }
 
-        public ServerController(IWorkflowExecutionController<Activity> workflowExecutionController)
+        public ServerController(IWorkflowExecutionController<Activity> workflowExecutionController,IResourceCatalogController resourceCatalogController)
         {
-            _workflowExecutionController = workflowExecutionController;
+            WorkflowExecutionController = workflowExecutionController;
+            ResourceCatalogController = resourceCatalogController;
         }
-        
+
+        public IResourceCatalog GetResourceCatalog()
+        {
+            return ResourceCatalogController.GetResourceCatalog();
+        }
+
         public IWorkflowApplicationFactory<T> GetWorkflowApplicationFactory<T>() where T : class
         {
-            return _workflowExecutionController.GetWorkflowApplicationFactory() as IWorkflowApplicationFactory<T>;
+            return WorkflowExecutionController.GetWorkflowApplicationFactory() as IWorkflowApplicationFactory<T>;
         }
     }
 }

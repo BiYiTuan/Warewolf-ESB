@@ -36,7 +36,7 @@ namespace Dev2.Workspaces
         public static readonly string ServerWorkspacePath = EnvironmentVariables.GetWorkspacePath(GlobalConstants.ServerWorkspaceID);
 
         readonly ConcurrentDictionary<string, Guid> _userMap;
-        readonly ConcurrentDictionary<Guid, Common.Interfaces.IWorkspace> _items = new ConcurrentDictionary<Guid, Common.Interfaces.IWorkspace>();
+        readonly ConcurrentDictionary<Guid, IWorkspace> _items = new ConcurrentDictionary<Guid, IWorkspace>();
         readonly IResourceCatalog _resourceCatalog;
 
         private static readonly object WorkspaceLock = new object();
@@ -82,7 +82,7 @@ namespace Dev2.Workspaces
         #region Initialization
 
         public WorkspaceRepository()
-            : this(ResourceCatalog.Instance)
+            : this(CustomContainer.Get<IServerController>().GetResourceCatalog())
         {
         }
 
@@ -91,7 +91,7 @@ namespace Dev2.Workspaces
         {
             if(resourceCatalog == null)
             {
-                throw new ArgumentNullException("resourceCatalog");
+                resourceCatalog = new ResourceCatalog();
             }
             _resourceCatalog = resourceCatalog;
             Directory.CreateDirectory(EnvironmentVariables.WorkspacePath);
@@ -126,7 +126,7 @@ namespace Dev2.Workspaces
         /// <summary>
         /// Gets the server workspace.
         /// </summary>
-        public Common.Interfaces.IWorkspace ServerWorkspace
+        public IWorkspace ServerWorkspace
         {
             get
             {
@@ -166,12 +166,12 @@ namespace Dev2.Workspaces
         /// <returns>
         /// The <see cref="Common.Interfaces.IWorkspace" /> with the specified ID, or <code>null</code> if not found.
         /// </returns>
-        public Common.Interfaces.IWorkspace Get(Guid workspaceID, bool force = false, bool loadResources = true)
+        public IWorkspace Get(Guid workspaceID, bool force = false, bool loadResources = true)
         {
             lock(_readLock)
             {
                 // PBI 9363 - 2013.05.29 - TWR: Added loadResources parameter
-                Common.Interfaces.IWorkspace workspace;
+                IWorkspace workspace;
                 if(force || !_items.TryGetValue(workspaceID, out workspace))
                 {
                     workspace = Read(workspaceID);
@@ -200,7 +200,7 @@ namespace Dev2.Workspaces
             List<Guid> worksSpacesToRemove = _items.Keys.Where(k => k != ServerWorkspaceID).ToList();
             foreach(Guid workspaceGuid in worksSpacesToRemove)
             {
-                Common.Interfaces.IWorkspace workspace;
+                IWorkspace workspace;
                 _items.TryRemove(workspaceGuid, out workspace);
             }
         }
@@ -214,7 +214,7 @@ namespace Dev2.Workspaces
         /// </summary>
         /// <param name="workspace">The workspace to be queried.</param>
         /// <param name="servicesToIgnore">The services being to be ignored.</param>
-        public void GetLatest(Common.Interfaces.IWorkspace workspace, IList<string> servicesToIgnore)
+        public void GetLatest(IWorkspace workspace, IList<string> servicesToIgnore)
         {
             lock(_readLock)
             {
@@ -234,7 +234,7 @@ namespace Dev2.Workspaces
         /// Saves the specified workspace to storage.
         /// </summary>
         /// <param name="workspace">The workspace to be saved.</param>
-        public void Save(Common.Interfaces.IWorkspace workspace)
+        public void Save(IWorkspace workspace)
         {
             if(workspace == null)
             {
@@ -258,14 +258,14 @@ namespace Dev2.Workspaces
         /// Deletes the specified workspace from storage.
         /// </summary>
         /// <param name="workspace">The workspace to be deleted.</param>
-        public void Delete(Common.Interfaces.IWorkspace workspace)
+        public void Delete(IWorkspace workspace)
         {
             if(workspace == null)
             {
                 return;
             }
 
-            Common.Interfaces.IWorkspace result;
+            IWorkspace result;
             _items.TryRemove(workspace.ID, out result);
             Delete(workspace.ID);
         }
@@ -278,7 +278,7 @@ namespace Dev2.Workspaces
 
         #region Read
 
-        private Common.Interfaces.IWorkspace Read(Guid workdspaceID)
+        private IWorkspace Read(Guid workdspaceID)
         {
             // force a lock on the file system ;)
             lock(WorkspaceLock)
@@ -292,7 +292,7 @@ namespace Dev2.Workspaces
                     {
                         try
                         {
-                            return (Common.Interfaces.IWorkspace)formatter.Deserialize(stream);
+                            return (IWorkspace)formatter.Deserialize(stream);
                         }
                         // ReSharper disable EmptyGeneralCatchClause 
                         catch(Exception ex)
@@ -314,7 +314,7 @@ namespace Dev2.Workspaces
 
         #region Write
 
-        void Write(Common.Interfaces.IWorkspace workspace)
+        void Write(IWorkspace workspace)
         {
             if(workspace == null)
             {

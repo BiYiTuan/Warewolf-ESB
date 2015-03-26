@@ -23,7 +23,6 @@ using Dev2.DataList.Contract;
 using Dev2.DataList.Contract.Binary_Objects;
 using Dev2.Diagnostics;
 using Dev2.Diagnostics.Debug;
-using Dev2.Runtime.Hosting;
 
 namespace Dev2.Runtime.ESB.WF
 {
@@ -210,17 +209,17 @@ namespace Dev2.Runtime.ESB.WF
         /// <returns></returns>
         public string FindServiceShape(Guid workspaceId, Guid resourceId)
         {
-            const string EmptyDataList = "<DataList></DataList>";
-            var resource = ResourceCatalog.Instance.GetResource(workspaceId, resourceId);
+            const string emptyDataList = "<DataList></DataList>";
+            var resource = CustomContainer.Get<IServerController>().GetResourceCatalog().GetResource(workspaceId, resourceId);
 
             if(resource == null)
             {
-                return EmptyDataList;
+                return emptyDataList;
             }
 
             var serviceShape = resource.DataList.Replace(GlobalConstants.SerializableResourceQuote,"\"").ToString();
             serviceShape = serviceShape.Replace(GlobalConstants.SerializableResourceSingleQuote,"\'");
-            return string.IsNullOrEmpty(serviceShape) ? EmptyDataList : serviceShape;
+            return string.IsNullOrEmpty(serviceShape) ? emptyDataList : serviceShape;
         }
     }
 }

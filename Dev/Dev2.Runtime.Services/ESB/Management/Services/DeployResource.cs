@@ -19,7 +19,6 @@ using Dev2.Common.Interfaces.Core.DynamicServices;
 using Dev2.Communication;
 using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
-using Dev2.Runtime.Hosting;
 using Dev2.Workspaces;
 
 namespace Dev2.Runtime.ESB.Management.Services
@@ -41,7 +40,7 @@ namespace Dev2.Runtime.ESB.Management.Services
                 throw new InvalidDataContractException("Roles or ResourceDefinition missing");
             }
 
-            var msg = ResourceCatalog.Instance.SaveResource(WorkspaceRepository.ServerWorkspaceID, resourceDefinition,null,"Deploy","unknown");
+            var msg = CustomContainer.Get<IServerController>().GetResourceCatalog().SaveResource(WorkspaceRepository.ServerWorkspaceID, resourceDefinition,null,"Deploy","unknown");
             WorkspaceRepository.Instance.RefreshWorkspaces();
 
             var result = new ExecuteMessage { HasError = false };

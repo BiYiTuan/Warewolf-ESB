@@ -92,9 +92,9 @@ namespace Dev2.DynamicServices.Test
                 var repositoryInstance = SetupRepo(out workspaceID);
                 var workspace = repositoryInstance.Get(workspaceID);
 
-                var previous = ResourceCatalog.Instance.GetResource(workspaceID, ServiceID);
+                var previous = new ResourceCatalog().GetResource(workspaceID, ServiceID);
                 workspace.Update(workspaceItem.Object, false, previous.AuthorRoles);
-                var next = ResourceCatalog.Instance.GetResource(workspaceID, ServiceID);
+                var next = new ResourceCatalog().GetResource(workspaceID, ServiceID);
                 Assert.AreNotSame(previous, next);
             }
         }
@@ -120,11 +120,12 @@ namespace Dev2.DynamicServices.Test
                 data["IsLocalSave"] = new StringBuilder("true");
 
                 // Now remove the 
-                ResourceCatalog.Instance.DeleteResource(GlobalConstants.ServerWorkspaceID, ServiceID, "WorkflowService", "Domain Admins,Domain Users,Windows SBS Remote Web Workplace Users,Windows SBS Fax Users,Windows SBS Folder Redirection Accounts,All Users,Windows SBS SharePoint_MembersGroup,Windows SBS Link Users,Company Users,Business Design Studio Developers,Test Engineers,DEV2 Limited Internet Access");
+                var resourceCatalog = new ResourceCatalog();
+                resourceCatalog.DeleteResource(GlobalConstants.ServerWorkspaceID, ServiceID, "WorkflowService", "Domain Admins,Domain Users,Windows SBS Remote Web Workplace Users,Windows SBS Fax Users,Windows SBS Folder Redirection Accounts,All Users,Windows SBS SharePoint_MembersGroup,Windows SBS Link Users,Company Users,Business Design Studio Developers,Test Engineers,DEV2 Limited Internet Access");
 
                 endpoint.Execute(data, workspace);
 
-                var res = ResourceCatalog.Instance.GetResource(GlobalConstants.ServerWorkspaceID, ServiceID);
+                var res = resourceCatalog.GetResource(GlobalConstants.ServerWorkspaceID, ServiceID);
 
                 Assert.IsNull(res);
             }
@@ -147,10 +148,10 @@ namespace Dev2.DynamicServices.Test
                 var repositoryInstance = SetupRepo(out workspaceID);
 
                 var workspace = repositoryInstance.Get(GlobalConstants.ServerWorkspaceID);
-
-                var previous = ResourceCatalog.Instance.GetResource(GlobalConstants.ServerWorkspaceID, ServiceID);
+                var resourceCatalog = new ResourceCatalog();
+                var previous = resourceCatalog.GetResource(GlobalConstants.ServerWorkspaceID, ServiceID);
                 workspace.Update(workspaceItem.Object, false, previous.AuthorRoles);
-                var next = ResourceCatalog.Instance.GetResource(GlobalConstants.ServerWorkspaceID, ServiceID);
+                var next = resourceCatalog.GetResource(GlobalConstants.ServerWorkspaceID, ServiceID);
                 Assert.AreSame(previous, next);
             }
         }
@@ -257,14 +258,6 @@ namespace Dev2.DynamicServices.Test
 
         // PBI 9363 - 2013.05.29 - TWR: Added 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void WorkspaceRepositoryWithNullResourceCatalogExpectedThrowsArgumentNullException()
-        {
-            new WorkspaceRepository(null);
-        }
-
-        // PBI 9363 - 2013.05.29 - TWR: Added 
-        [TestMethod]
         public void WorkspaceRepositoryWithResourceCatalogExpectedDoesNotLoadResources()
         {
             var catalog = new Mock<IResourceCatalog>();
@@ -338,6 +331,10 @@ namespace Dev2.DynamicServices.Test
 
         public static WorkspaceRepository SetupRepo(out Guid workspaceID)
         {
+            var resourceCatalog = new ResourceCatalog();
+            var mockController = new Mock<IServerController>();
+            mockController.Setup(controller => controller.GetResourceCatalog()).Returns(resourceCatalog);
+            CustomContainer.Register(mockController.Object);
             var repo = new WorkspaceRepository();
             workspaceID = Guid.NewGuid();
             List<IResource> resources;
@@ -345,7 +342,8 @@ namespace Dev2.DynamicServices.Test
             ResourceCatalogTests.SaveResources(workspaceID, null, true, true, new string[0], new[] { "Calculate_RecordSet_Subtract" }, out resources, new Guid[0], new[] { Guid.NewGuid() });
 
             // Force reload of server workspace from _currentTestDir
-            ResourceCatalog.Instance.LoadWorkspace(GlobalConstants.ServerWorkspaceID);
+            
+            resourceCatalog.LoadWorkspace(GlobalConstants.ServerWorkspaceID);
             return repo;
         }
     }

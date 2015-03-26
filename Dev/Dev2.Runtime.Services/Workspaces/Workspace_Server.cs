@@ -10,10 +10,11 @@
 */
 
 using System;
+using Dev2.Common;
 using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Core.DynamicServices;
-using Dev2.Runtime.Hosting;
 
+// ReSharper disable once CheckNamespace
 namespace Dev2.Workspaces
 {
     public partial class Workspace
@@ -111,7 +112,7 @@ namespace Dev2.Workspaces
 
             #endregion
 
-            ResourceCatalog.Instance.CopyResource(workspaceItem.ID, source.ID, destination.ID, roles);
+            CustomContainer.Get<IServerController>().GetResourceCatalog().CopyResource(workspaceItem.ID, source.ID, destination.ID, roles);
         }
 
         #endregion

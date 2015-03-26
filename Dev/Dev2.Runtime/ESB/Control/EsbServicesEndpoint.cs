@@ -24,13 +24,11 @@ using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Communication;
 using Dev2.Data.Binary_Objects;
-using Dev2.Data.Enums;
 using Dev2.Data.Storage;
 using Dev2.Data.Util;
 using Dev2.DataList.Contract;
 using Dev2.DynamicServices;
 using Dev2.Runtime.ESB.Execution;
-using Dev2.Runtime.Hosting;
 using Dev2.Workspaces;
 using Newtonsoft.Json;
 
@@ -574,7 +572,8 @@ namespace Dev2.Runtime.ESB.Control
         public StringBuilder FindServiceShape(Guid workspaceId, Guid resourceId)
         {
             var result = new StringBuilder();
-            var resource = ResourceCatalog.Instance.GetResource(workspaceId, resourceId) ?? ResourceCatalog.Instance.GetResource(GlobalConstants.ServerWorkspaceID, resourceId);
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
+            var resource = resourceCatalog.GetResource(workspaceId, resourceId) ?? resourceCatalog.GetResource(GlobalConstants.ServerWorkspaceID, resourceId);
 
             if(resource == null)
             {
@@ -613,7 +612,8 @@ namespace Dev2.Runtime.ESB.Control
         /// <returns></returns>
         public StringBuilder FindServiceShape(Guid workspaceId, string resourceName)
         {
-            var resource = ResourceCatalog.Instance.GetResource(workspaceId, resourceName) ?? ResourceCatalog.Instance.GetResource(GlobalConstants.ServerWorkspaceID, resourceName);
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
+            var resource = resourceCatalog.GetResource(workspaceId, resourceName) ?? resourceCatalog.GetResource(GlobalConstants.ServerWorkspaceID, resourceName);
             StringBuilder result = new StringBuilder();
             if(resource == null)
             {
@@ -755,7 +755,8 @@ namespace Dev2.Runtime.ESB.Control
 
         static bool IsServiceWorkflow(Guid workspaceID, Guid resourceID)
         {
-            var resource = ResourceCatalog.Instance.GetResource(workspaceID, resourceID) ?? ResourceCatalog.Instance.GetResource(GlobalConstants.ServerWorkspaceID, resourceID);
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
+            var resource = resourceCatalog.GetResource(workspaceID, resourceID) ?? resourceCatalog.GetResource(GlobalConstants.ServerWorkspaceID, resourceID);
             if(resource == null)
             {
                 return false;
@@ -853,7 +854,7 @@ namespace Dev2.Runtime.ESB.Control
         /// <returns></returns>
         static bool SubExecutionRequiresShape(Guid workspaceID, string serviceName)
         {
-            var resource = ResourceCatalog.Instance.GetResource(workspaceID, serviceName);
+            var resource = CustomContainer.Get<IServerController>().GetResourceCatalog().GetResource(workspaceID, serviceName);
             return resource == null || (resource.ResourceType != ResourceType.WebService && resource.ResourceType != ResourceType.PluginService);
 
         }

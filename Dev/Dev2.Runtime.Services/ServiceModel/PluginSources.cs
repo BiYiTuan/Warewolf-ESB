@@ -13,9 +13,9 @@ using System;
 using System.Reflection;
 using System.Xml.Linq;
 using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Runtime.Diagnostics;
-using Dev2.Runtime.Hosting;
 using Dev2.Runtime.ServiceModel.Data;
 using Dev2.Runtime.ServiceModel.Esb.Brokers;
 using Newtonsoft.Json;
@@ -88,11 +88,11 @@ namespace Dev2.Runtime.ServiceModel
                     pluginSourceDetails.AssemblyName = getName;
                 }
             }
-
-            ResourceCatalog.Instance.SaveResource(workspaceId, pluginSourceDetails);
+            var resourceCatalog = CustomContainer.Get<IServerController>().GetResourceCatalog();
+            resourceCatalog.SaveResource(workspaceId, pluginSourceDetails);
             if(workspaceId != GlobalConstants.ServerWorkspaceID)
             {
-                ResourceCatalog.Instance.SaveResource(GlobalConstants.ServerWorkspaceID, pluginSourceDetails);
+                resourceCatalog.SaveResource(GlobalConstants.ServerWorkspaceID, pluginSourceDetails);
             }
 
             return pluginSourceDetails.ToString();

@@ -189,6 +189,9 @@
     <Compile Include="Infrastructure\SharedModels\IDbColumnList.cs" />
     <Compile Include="Interfaces\IDev2TOFn.cs" />
     <Compile Include="IPulseLogger.cs" />
+    <Compile Include="IResourceCatalog.cs" />
+    <Compile Include="IResourceCatalogController.cs" />
+    <Compile Include="IResourceCatalogResult.cs" />
     <Compile Include="IServerController.cs" />
     <Compile Include="IVersionStrategy.cs" />
     <Compile Include="IWarewolfActivity.cs" />

@@ -14,11 +14,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Xml.Linq;
+using Dev2.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Runtime.Hosting;
 using Dev2.Tests.Runtime.Hosting;
 using Dev2.Workspaces;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 
 namespace Dev2.DynamicServices.Test
 {
@@ -67,8 +70,11 @@ namespace Dev2.DynamicServices.Test
                 out resources,
                 new[] { SourceID, Guid.Parse(ServerConnection1ID), Guid.Parse(ServerConnection2ID) },
                 new[] { ServiceID, UnsignedServiceID });
-
-            ResourceCatalog.Instance.LoadWorkspace(_workspaceID);
+            var resourceCatalog = new ResourceCatalog();
+            var mockResourceCatalogController = new Mock<IResourceCatalogController>();
+            mockResourceCatalogController.Setup(controller => controller.GetResourceCatalog()).Returns(resourceCatalog);
+            CustomContainer.Register(mockResourceCatalogController.Object);
+            resourceCatalog.LoadWorkspace(_workspaceID);
         }
 
         #endregion

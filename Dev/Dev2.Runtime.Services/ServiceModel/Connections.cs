@@ -17,15 +17,17 @@ using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
+using System.Threading;
 using System.Xml.Linq;
 using Dev2.Common;
 using Dev2.Common.Common;
+using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data;
 using Dev2.Runtime.Diagnostics;
-using Dev2.Runtime.Hosting;
 using Dev2.Runtime.ServiceModel.Data;
 using Microsoft.AspNet.SignalR.Client;
 using Newtonsoft.Json;
+using Connection = Dev2.Data.ServiceModel.Connection;
 
 // ReSharper disable InconsistentNaming
 namespace Dev2.Runtime.ServiceModel
@@ -60,17 +62,17 @@ namespace Dev2.Runtime.ServiceModel
         #region Get
 
         // POST: Service/Connections/Get
-        public Dev2.Data.ServiceModel.Connection Get(string resourceID, Guid workspaceID, Guid dataListID)
+        public Connection Get(string resourceID, Guid workspaceID, Guid dataListID)
         {
-            var result = new Dev2.Data.ServiceModel.Connection { ResourceID = Guid.Empty, ResourceType = ResourceType.Server, WebServerPort = Dev2.Data.ServiceModel.Connection.DefaultWebServerPort };
+            var result = new Connection { ResourceID = Guid.Empty, ResourceType = ResourceType.Server, WebServerPort = Connection.DefaultWebServerPort };
             try
             {
 
-                var contents = ResourceCatalog.Instance.GetResourceContents(workspaceID, Guid.Parse(resourceID));
+                var contents = CustomContainer.Get<IServerController>().GetResourceCatalog().GetResourceContents(workspaceID, Guid.Parse(resourceID));
                 if(contents != null && contents.Length > 0)
                 {
                     var xml = contents.ToXElement();
-                    result = new Dev2.Data.ServiceModel.Connection(xml);
+                    result = new Connection(xml);
                 }
             }
             catch(Exception ex)
@@ -89,7 +91,7 @@ namespace Dev2.Runtime.ServiceModel
         {
             try
             {
-                var connection = JsonConvert.DeserializeObject<Dev2.Data.ServiceModel.Connection>(args);
+                var connection = JsonConvert.DeserializeObject<Connection>(args);
 
                 Uri actualUri;
 
@@ -106,7 +108,7 @@ namespace Dev2.Runtime.ServiceModel
                     connection.Password = string.Empty;
                 }
 
-                ResourceCatalog.Instance.SaveResource(workspaceID, connection);
+                CustomContainer.Get<IServerController>().GetResourceCatalog().SaveResource(workspaceID, connection);
                 return connection.ToString();
             }
             catch(Exception ex)
@@ -150,7 +152,7 @@ namespace Dev2.Runtime.ServiceModel
 
             try
             {
-                var connection = JsonConvert.DeserializeObject<Dev2.Data.ServiceModel.Connection>(args);
+                var connection = JsonConvert.DeserializeObject<Connection>(args);
                 switch(connection.ResourceType)
                 {
                     case ResourceType.Server:
@@ -168,7 +170,7 @@ namespace Dev2.Runtime.ServiceModel
 
         #endregion
 
-        ValidationResult CanConnectToServer(Dev2.Data.ServiceModel.Connection connection)
+        ValidationResult CanConnectToServer(Connection connection)
         {
             var result = new ValidationResult
             {
@@ -227,10 +229,10 @@ namespace Dev2.Runtime.ServiceModel
             return result;
         }
 
-        protected virtual string ConnectToServer(Dev2.Data.ServiceModel.Connection connection)
+        protected virtual string ConnectToServer(Connection connection)
         {
             // we need to grab the principle and impersonate to properly execute in context of the requesting user ;)
-            var principle = System.Threading.Thread.CurrentPrincipal;
+            var principle = Thread.CurrentPrincipal;
             var identity = principle.Identity as WindowsIdentity;
             WindowsImpersonationContext context = null;
 
@@ -269,7 +271,7 @@ namespace Dev2.Runtime.ServiceModel
                         hub = new HubConnection(connection.FetchTestConnectionAddress()) { Credentials = client.Credentials };
                         ServicePointManager.ServerCertificateValidationCallback = ValidateServerCertificate;
 #pragma warning disable 168
-                        var proxy = hub.CreateHubProxy("esb"); // this is the magic line that causes proper validation
+                        hub.CreateHubProxy("esb"); // this is the magic line that causes proper validation
 #pragma warning restore 168
                         hub.Start().Wait();
 

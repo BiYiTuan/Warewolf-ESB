@@ -18,8 +18,6 @@ using Dev2.Common.Interfaces.Core.DynamicServices;
 using Dev2.Communication;
 using Dev2.DynamicServices;
 using Dev2.DynamicServices.Objects;
-using Dev2.Runtime.Hosting;
-using Dev2.Workspaces;
 
 namespace Dev2.Runtime.ESB.Management.Services
 {
@@ -56,7 +54,7 @@ namespace Dev2.Runtime.ESB.Management.Services
                 // NOTE : Current types are : Email, SqlDatabase, Dev2Server
 
                 // BUG 7850 - TWR - 2013.03.11 - ResourceCatalog re-factor
-                var result = ResourceCatalog.Instance.GetModels(theWorkspace.ID, sourceType);
+                var result = CustomContainer.Get<IServerController>().GetResourceCatalog().GetModels(theWorkspace.ID, sourceType);
                 if(result != null)
                 {
                     Dev2JsonSerializer serializer = new Dev2JsonSerializer();
