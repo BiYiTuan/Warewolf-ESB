@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.DurableInstancing;
 using System.Threading;
+using System.Windows.Threading;
 using Dev2.Common;
 using Dev2.Common.Interfaces;
 using Dev2.Common.Interfaces.Data.TO;
@@ -52,6 +53,23 @@ namespace Dev2.Runtime.ESB.WF
         public IDSFDataObject InvokeWorkflow(IWarewolfActivity<Activity> workflowActivity, IDSFDataObject dataTransferObject,
             IList<object> executionExtensions, Guid instanceId, IWorkspace workspace, string bookmarkName, out IErrorResultTO errors)
         {
+            Dev2Logger.Log.Debug("Exit all frames for dispatcher");
+//            Dispatcher.ExitAllFrames();
+//            Dispatcher.CurrentDispatcher.Hooks.OperationPosted += (sender, args) =>
+//            {
+//                if (args.Operation != null)
+//                {
+//
+//                }
+//            };
+//            Dispatcher.CurrentDispatcher.Hooks.OperationStarted += (sender, args) =>
+//            {
+//                if (args.Operation != null)
+//                {
+//
+//                }
+//            };
+//            Dev2Logger.Log.Debug("All frames for dispatcher exited");
             errors = new ErrorResultTO();
             ErrorResultTO errorsTo;
             return InvokeWorkflow(workflowActivity.Activity, dataTransferObject, executionExtensions, instanceId, workspace,
