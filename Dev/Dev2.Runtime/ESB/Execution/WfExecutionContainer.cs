@@ -11,7 +11,9 @@
 
 using System;
 using System.Activities;
+using System.Activities.Statements;
 using System.Collections.Generic;
+using System.Linq;
 using Dev2.Activities.Debug;
 using Dev2.Common;
 using Dev2.Common.Interfaces;
@@ -103,7 +105,19 @@ namespace Dev2.Runtime.ESB.Execution
           
                 // BUG 9304 - 2013.05.08 - TWR - Added CompileExpressions
                 _workflowHelper.CompileExpressions(theActivity,DataObject.ResourceID);
+                try
+                {
+                    var newResult = Eval(theActivity, DataObject.ResourceID);
+                    var x = newResult.RecordSets;
+                }
+                    // ReSharper disable EmptyGeneralCatchClause
+                catch(Exception err)
+                    // ReSharper restore EmptyGeneralCatchClause
+                {
 
+                    string s = err.Message;
+                }
+              
                 IDSFDataObject exeResult = wfFactor.InvokeWorkflow(new WarewolfActivity(activity.Value), DataObject,
                                                                    new List<object> { EsbChannel, }, instanceId,
                                                                    TheWorkspace, bookmark, out errorsTo);
@@ -132,7 +146,21 @@ namespace Dev2.Runtime.ESB.Execution
             Dev2Logger.Log.Info(String.Format("Completed Execution for Service Name:{0} Resource Id: {1} Mode:{2}",DataObject.ServiceName,DataObject.ResourceID,DataObject.IsDebug?"Debug":"Execute"));
             return result;
         }
+        public ToolAst.Tool Parse(DynamicActivity dynamicActivity, Guid resourceID)
+        {
+            var chart = WorkflowInspectionServices.GetActivities(dynamicActivity).FirstOrDefault() as Flowchart;
+            if (chart != null)
+            {
+                var tool = EvalTools.ParseTool(chart.StartNode);
+                return tool;
+            }
+            return null;
+        }
 
+        public DataAST.Environment Eval(DynamicActivity dynamicActivity, Guid resourceID)
+        {
+            return EvalTools.EvalTool(Parse(dynamicActivity, resourceID), EvalTools.NewEnv);
+        }
         public List<DebugItem> GetDebugInputs(IList<IDev2Definition> inputs, IBinaryDataList dataList, ErrorResultTO errors)
         {
             if(errors == null)
